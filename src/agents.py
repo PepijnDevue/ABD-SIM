@@ -55,7 +55,7 @@ class Person(mesa.Agent):
     
     def _remove(self) -> None:
         """
-        Remove self (thsi agent) from the simulation
+        Remove self (this agent) from the simulation
         """
         self._model.grid.remove_agent(self)
         self._model.schedule.remove(self)
