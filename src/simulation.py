@@ -5,6 +5,7 @@ from .agents import Person, Wall, Exit
 
 from .activation import RandomActivation
 from .floor_plan import floor_plans
+from .pathfinding import Pathfinder
 
 from .ui import show_grid
 import time
@@ -27,7 +28,8 @@ class Simulation(mesa.Model):
         self.floor_plan = floor_plans[floor_plan]
 
         self.grid = self.setup_grid()
-        self.graph = self.setup_graph()
+
+        self.pathfinder = Pathfinder(self.grid)
 
         self.spawn_agents(num_agents)
 
@@ -53,38 +55,6 @@ class Simulation(mesa.Model):
                     grid.place_agent(Exit(self), (x, y))
 
         return grid
-    
-    def setup_graph(self) -> nx.Graph:
-        """
-        Create a graph from the grid.
-
-        Returns:
-            nx.Graph: The graph representing the grid.
-        """
-        graph = nx.Graph()
-
-        for agent, coordinates in self.grid.coord_iter():
-            # Skip wall agents and create a node for non-wall agents
-            if isinstance(agent, Wall):
-                continue
-            
-            graph.add_node(coordinates)
-            neighbors = self.grid.get_neighborhood(coordinates, moore=False, include_center=False)
-            
-            for neighbor in neighbors:
-                # Cell content is a list of agents in the cell, it is empty if the cell is empty and has no agents
-                cell_content = self.grid.get_cell_list_contents(neighbor)
-                
-                # If the neighbor cell is empty and not a wall, add an edge
-                if len(cell_content) == 0:
-                    graph.add_edge(coordinates, neighbor)
-                else:
-                    # Otherwise, check if the neighbor contains an agent that is not a wall
-                    neighbor_agent = cell_content[0]
-                    if not isinstance(neighbor_agent, Wall):
-                        graph.add_edge(coordinates, neighbor)
-
-        return graph
 
     def spawn_agents(self, num_agents: int=1) -> None:
         """
