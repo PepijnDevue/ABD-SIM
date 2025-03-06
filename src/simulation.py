@@ -6,6 +6,8 @@ from .activation import RandomActivation
 from .floor_plan import floor_plan
 
 from .ui import show_grid
+import os
+import time
 
 class Simulation(mesa.Model):
     """
@@ -71,4 +73,8 @@ class Simulation(mesa.Model):
             n: The number of timesteps to run the simulation for.
         """
         for _ in range(n):
+            os.system('cls')
+            show_grid(self.grid)
             self.step()
+            # time.sleep(0.5)
+            input()

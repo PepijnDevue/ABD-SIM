@@ -25,3 +25,9 @@ class RandomActivation:
 
         for agent in self._agents:
             agent.step()
+
+    def remove(self, agent: mesa.Agent) -> None:
+        """
+        Remove agent from the activation list
+        """
+        self._agents.remove(agent)
