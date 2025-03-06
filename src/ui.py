@@ -1,8 +1,9 @@
 import mesa
+import os
 
 from .agents import Person, Wall, Exit
 
-def show_grid(grid: mesa.space._PropertyGrid) -> None:
+def show_grid(grid: mesa.space._PropertyGrid, cls: bool=False) -> None:
     """
     Print the 2d grid
     . = empty
@@ -12,7 +13,11 @@ def show_grid(grid: mesa.space._PropertyGrid) -> None:
 
     Args:
         grid: The mesa grid containing the agents.
+        cls: If the screen should be cleared before showing the grid
     """
+    if cls:
+        os.system('cls')
+
     width = grid.width
     height = grid.height
 

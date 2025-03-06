@@ -29,8 +29,8 @@ class Person(mesa.Agent):
     def step(self):
         # TODO: Utility functie voor het bewegen van de agent
         new_position = self.calculateshortestpath()[0]
-        # TODO Log agent
         if self._cell_is_exit(new_position):
+            # TODO Log agent
             self._remove()
         else:
             self._model.grid.move_agent(self, new_position)
