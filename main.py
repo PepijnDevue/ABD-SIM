@@ -2,4 +2,4 @@ from src import Simulation
 
 sim = Simulation()
 
-sim.run(10)
+sim.run(100)
