@@ -26,4 +26,36 @@ class Person(mesa.Agent):
 
     def step(self):
         # TODO: Utility functie voor het bewegen van de agent
-        pass
+
+        # step one block down
+        new_position = (self.pos[0], self.pos[1] + 1)
+
+        # check move
+        if self._cell_is_exit(new_position):
+            self._remove()
+            # TODO log agent
+        elif self._model.grid.is_cell_empty(new_position):
+            self._model.grid.move_agent(self, new_position)
+
+    def _cell_is_exit(self, position: tuple) -> bool:
+        """
+        Check if a cell on a given position is an exit cell
+
+        Args:
+            position: The coordinates of the cell
+
+        Returns:
+            bool: True if the cell contains an exit agent
+        """
+        is_empty = self._model.grid.is_cell_empty(position)
+
+        cell_content = self._model.grid.get_cell_list_contents(position)
+
+        return not is_empty and isinstance(cell_content[0], Exit)
+    
+    def _remove(self) -> None:
+        """
+        Remove self (this agent) from the simulation
+        """
+        self._model.grid.remove_agent(self)
+        self._model.schedule.remove(self)
