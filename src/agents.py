@@ -26,14 +26,12 @@ class Person(mesa.Agent):
 
     def step(self):
         # TODO: Utility functie voor het bewegen van de agent
+        new_position = self._model.pathfinder.calculateshortestpath(self.pos)[0]
 
-        # step one block down
-        new_position = (self.pos[0], self.pos[1] + 1)
-
-        # check move
         if self._cell_is_exit(new_position):
+            # TODO Log agent
             self._remove()
-            # TODO log agent
+            
         elif self._model.grid.is_cell_empty(new_position):
             self._model.grid.move_agent(self, new_position)
 
