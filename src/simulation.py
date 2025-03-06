@@ -82,7 +82,7 @@ class Simulation(mesa.Model):
 
             self.step()
 
-            time.sleep(0.2)
+            time.sleep(0.5)
 
             if self.schedule.is_empty():
                 show_grid(self.grid, cls=True)

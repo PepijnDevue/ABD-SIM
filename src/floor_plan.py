@@ -20,5 +20,17 @@ floor_plans = {
         "W........W",
         "W........W",
         "WEWWWWWWWW"
+    ],
+    "HUNKEMOLLER_SUPREME": [
+        "WWWWWWWEWWWWWWW",
+        "W....W...W....W",
+        "W....W...W....W",
+        "W....W...W....W",
+        "W....W........W",
+        "W....W...W....W",
+        "W........W....W",
+        "W....W...W....W",
+        "W....W...W....W",
+        "WWWWWWWEWWWWWWW"
     ]
 }
