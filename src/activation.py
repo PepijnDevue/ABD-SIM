@@ -6,7 +6,7 @@ class RandomActivation:
     """
     def __init__(self, model: mesa.Model):
         self._model = model
-        self._agents = []
+        self._agents = {}
 
     def add(self, agent: mesa.Agent) -> None:
         """
@@ -15,13 +15,29 @@ class RandomActivation:
         Args:
             agent: The mesa agent to add.
         """
-        self._agents.append(agent)
+        self._agents[agent.unique_id] = agent
 
     def step(self) -> None:
         """
         Randomly activate agents.
         """
-        self._model.random.shuffle(self._agents)
+        agents = list(self._agents.values())
+        self._model.random.shuffle(agents)
 
-        for agent in self._agents:
+        for agent in agents:
             agent.step()
+
+    def remove(self, agent: mesa.Agent) -> None:
+        """
+        Remove agent from the activation list
+        """
+        unique_id = agent.unique_id
+
+        if unique_id in self._agents:
+            del self._agents[unique_id]
+
+    def is_empty(self) -> bool:
+        """
+        Check if the list of agents is empty
+        """
+        return len(self._agents) == 0
