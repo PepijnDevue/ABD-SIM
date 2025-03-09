@@ -30,7 +30,7 @@ class Person(mesa.Agent):
 
         if self._cell_is_exit(new_position):
             self._remove()
-            self.model.exit_times.append(self.model.step_count)
+            self.model.log_agent_evacuate_time()
             
         elif self._model.grid.is_cell_empty(new_position):
             self._model.grid.move_agent(self, new_position)

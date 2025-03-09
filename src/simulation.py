@@ -34,11 +34,19 @@ class Simulation(mesa.Model):
 
         self.spawn_agents(num_agents)
 
-        self.step_count = 0
+        self._step_count = 0
 
-        self.exit_times = []
+        self._exit_times = []
 
         show_grid(self.grid)
+
+    def log_agent_evacuate_time(self):
+        """
+        Log the simulation-time, an agent has evacuated
+        """
+        self._exit_times.append(
+            self._step_count
+        )
 
     def setup_grid(self) -> mesa.space.SingleGrid:
         """
@@ -74,7 +82,7 @@ class Simulation(mesa.Model):
         Simulate one timestep of the simulation.
         """
         self.schedule.step()
-        self.step_count += 1
+        self._step_count += 1
 
     def run(self, max_time_steps: int=100):
         """
@@ -95,4 +103,4 @@ class Simulation(mesa.Model):
                 break
 
         print("Simulation completed...")
-        log_sim(self.exit_times, self.step_count)
+        log_sim(self._exit_times, self._step_count)
