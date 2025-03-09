@@ -32,5 +32,24 @@ floor_plans = {
         "W....W...W....W",
         "W....W...W....W",
         "WWWWWWWEWWWWWWW"
-    ]
+    ],
+    "Heidelberglaan_15": [
+        "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",
+        "W..W..W.....W.....W..EWE..W.....W.....W.....W.....W..W..W.....W..EWE..W.....W............W",
+        "W..W..W.....W.....W..WWW..W.....W.....W.....W.....W..W..W.....W..WWW..W.....W............W",
+        "WW.W.WW.....W.....W..WWW..W.....W.....W.....W.....WW.W.WW.....W..WWW..W.....W............W",
+        "W.....W.....W.....W..WWW..W.....W.....W.....W.....W.....W.....W..WWW..W.....W............W",
+        "W.....W.....W.....W..WWW..W.....W.....W.....W.....W.....W.....W..WWW..W.....W............W",
+        "W.....W.WWWWW.WWWWW..EWW..WWWWW.W.WWWWWWWWW.W.WWWWW.....W.WWWWW..WWE..WW.WWWW............W",
+        "W........................................................................................W",
+        "W...........................................................................W............W",
+        "W..........W.WWWW.WWWW..WWWWW..W......W.W...W.W...W...W..WWWWWWWWW..WWWWW.WWWWWWWWWWWWWWWW",
+        "WWWWWWWWW..W....W....W..W...W..W......W.W...W.W...W...W..WWWWWWWWW..W.......WWWWWWWWWWWWWW",
+        "W..........W....W....W..W...WWWWWWWWWWWWWWWWWWWWWWWEEEWWWWWWWWWWWW..W.......WWWW..W......W",
+        "W.......W..WWWWWWWWWWW..W...WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW..W.......WWWW..W......W",
+        "W.......W............W..W...WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWW.........W",
+        "W.......W............W..W...WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.....WWWWWWWWWWWW.........W",
+        "WWWWWWWWW..WWWWWWWWWWW..WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.........W",
+        ""
+    ],
 }
