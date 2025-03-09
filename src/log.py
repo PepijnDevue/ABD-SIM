@@ -1,11 +1,24 @@
-def log_sim(ds):
-    # log list with evac times, avg evac time, total evac time
+import os
+import json
 
-    # read cnt 
-    cnt = 0
+def log_sim(exit_times: list[int], last_step_cnt) -> None:
+    file_path = os.path.join(os.path.dirname(__file__), "logs", "cnt")
 
-    # calc log stuff
-    pass
+    with open(file_path, "r", encoding="utf-8") as file:
+        cnt = int(file.read())
 
-    # write log
-    # cnt.json = dslkjfldssf
+    log_json = os.path.join(os.path.dirname(__file__), "logs", f"log_{cnt}.json")
+
+    data = {
+        "exit_times": exit_times,
+        "avg_evacuation_time": sum(exit_times) / len(exit_times),
+        "total_evacuation_time": last_step_cnt
+        }
+
+    with open(log_json, "w", encoding="utf-8") as json_file:
+        json.dump(data, json_file, indent=4)
+
+    cnt += 1
+
+    with open(file_path, "w", encoding="utf-8") as file:
+        file.write(str(cnt))
