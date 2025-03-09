@@ -6,6 +6,7 @@ from .agents import Person, Wall, Exit
 from .activation import RandomActivation
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
+from .log import log_sim
 
 from .ui import show_grid
 import time
@@ -33,7 +34,19 @@ class Simulation(mesa.Model):
 
         self.spawn_agents(num_agents)
 
+        self._step_count = 0
+
+        self._exit_times = []
+
         show_grid(self.grid)
+
+    def log_agent_evacuate_time(self):
+        """
+        Log the simulation-time, an agent has evacuated
+        """
+        self._exit_times.append(
+            self._step_count
+        )
 
     def setup_grid(self) -> mesa.space.SingleGrid:
         """
@@ -69,6 +82,7 @@ class Simulation(mesa.Model):
         Simulate one timestep of the simulation.
         """
         self.schedule.step()
+        self._step_count += 1
 
     def run(self, max_time_steps: int=100):
         """
@@ -88,4 +102,5 @@ class Simulation(mesa.Model):
                 show_grid(self.grid, cls=True)
                 break
 
-        input("Simulation completed...")
+        print("Simulation completed...")
+        log_sim(self._exit_times, self._step_count)

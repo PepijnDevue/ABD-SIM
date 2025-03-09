@@ -1,3 +1,6 @@
 __pycache__/
 .idea/
 .vscode/
+
+src/logs/*
+!src/logs/cnt
