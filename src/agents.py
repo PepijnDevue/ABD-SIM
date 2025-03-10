@@ -29,8 +29,8 @@ class Person(mesa.Agent):
         new_position = self._model.pathfinder.calculateshortestpath(self.pos)[0]
 
         if self._cell_is_exit(new_position):
-            # TODO Log agent
             self._remove()
+            self.model.log_agent_evacuate_time()
             
         elif self._model.grid.is_cell_empty(new_position):
             self._model.grid.move_agent(self, new_position)

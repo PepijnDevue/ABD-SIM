@@ -1,5 +1,5 @@
 from src import Simulation
 
-sim = Simulation(floor_plan="HUNKEMOLLER_TWISTER", num_agents=2)
+sim = Simulation(floor_plan="Heidelberglaan_15", num_agents=100)
 
-sim.run(max_time_steps=100)
+sim.run(max_time_steps=10_000)

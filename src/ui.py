@@ -38,7 +38,7 @@ def print_cell(cell: list) -> None:
     char = '?'
 
     if len(cell) == 0:
-        char = '.'
+        char = ' '
     elif isinstance(cell[0], Wall):
         char = 'W'
     elif isinstance(cell[0], Exit):
