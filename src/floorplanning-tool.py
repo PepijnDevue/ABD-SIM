@@ -193,7 +193,7 @@ class SimulationUI(QMainWindow):
     def update_console(self):
         # Generate the JSON-style grid text
         grid_text = ',\n'.join([f"'{''.join(row)}'" for row in self.grid_data])  # Each row as a string
-        json_output = f"{{'Unnamed_Grid': [\n{grid_text}\n]}}"
+        json_output = f"{{'{self.grid_name_input.text().strip()}d': [\n{grid_text}\n]}}"
         
         # Display the JSON-style representation in the QTextEdit (console output)
         self.console_output.setText(json_output)
@@ -205,7 +205,7 @@ class SimulationUI(QMainWindow):
         """
         # Generate the JSON-style grid text
         grid_text = ',\n'.join([f"'{''.join(row)}'" for row in self.grid_data])  # Each row as a string
-        json_output = f"{{'Unnamed_Grid': [\n{grid_text}\n]}}"
+        json_output = f"{{'{self.grid_name_input.text().strip()}': [\n{grid_text}\n]}}"
         
         # Print the JSON-style representation in the console (QTextEdit)
         print(json_output)  # This prints to the real console
