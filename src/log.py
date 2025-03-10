@@ -39,7 +39,7 @@ def read_increment_log_count() -> int:
     Returns:
         int: A unique log-num
     """
-    file_path = os.path.join(os.path.dirname(__file__), "logs", "cnt")
+    file_path = os.path.join(os.path.dirname(__file__), "logs", "cnt.txt")
 
     with open(file_path, "r", encoding="utf-8") as file:
         count = int(file.read())
