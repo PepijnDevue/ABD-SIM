@@ -8,9 +8,9 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QGridLayout, QPushButton,
 from PyQt6.QtCore import QSize
 
 # Initialize constants
-GRID_SIZE_X = 10  # Define gridsize length
-GRID_SIZE_Y = 10  # Define gridsize width
-CELL_SIZE = 40  # Define cell size in pixels
+GRID_SIZE_X = 90  # Define gridsize width
+GRID_SIZE_Y = 32  # Define gridsize length
+CELL_SIZE = 18  # Define cell size in pixels
 
 TILES = ['.', 'W', 'E']  # Possible tile states
 """
@@ -23,30 +23,41 @@ COLORS = {'.': 'white', 'W': 'black', 'E': 'green'} # Color of each state
 class SimulationUI(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.GRID_SIZE_X = GRID_SIZE_X  # Set standard grid size
-        self.GRID_SIZE_Y = GRID_SIZE_Y
+        self.GRID_SIZE_Y = GRID_SIZE_Y  # Set standard grid size
+        self.GRID_SIZE_X = GRID_SIZE_X
         self.CELL_SIZE = CELL_SIZE
 
         # Initialize the grid with empty/white cells
-        self.grid_data = [['.'] * self.GRID_SIZE_Y for _ in range(self.GRID_SIZE_X)]
-        
-        # Set outer tiles to 'W' (Wall) (black color)
-        for i in range(self.GRID_SIZE_X):
-            self.grid_data[i][0] = 'W'  # Left column
-            self.grid_data[i][self.GRID_SIZE_Y - 1] = 'W'  # Right column
-        for j in range(self.GRID_SIZE_Y):
-            self.grid_data[0][j] = 'W'  # Top row
-            self.grid_data[self.GRID_SIZE_X - 1][j] = 'W'  # Bottom row
+        self.grid_data = self.init_grid()
+    
+        self.init_wall() # Set the outer walls of the grid to "W" or black
 
         self.init_ui()
+
+    def init_grid(self) -> list:
+        """
+        Initialize the grid with empty cells.
+        """
+        return [['.'] * self.GRID_SIZE_X for _ in range(self.GRID_SIZE_Y)]
+
+    def init_wall(self):
+        """
+        Set outer tiles of grid to 'W' (Wall) (black color)
+        """
+        for i in range(self.GRID_SIZE_Y):
+            self.grid_data[i][0] = 'W'  # Left column
+            self.grid_data[i][self.GRID_SIZE_X - 1] = 'W'  # Right column
+        for j in range(self.GRID_SIZE_X):
+            self.grid_data[0][j] = 'W'  # Top row
+            self.grid_data[self.GRID_SIZE_Y - 1][j] = 'W'  # Bottom row
 
     def adjust_window_size(self):
         """
         To make it possible to input other numbers than the default 10 the window is dynamic,
         To accommodate the "go" button and to have some "pazass" there is a padding built in.
         """
-        grid_width = self.GRID_SIZE_Y * self.CELL_SIZE
-        grid_height = self.GRID_SIZE_X * self.CELL_SIZE
+        grid_width = self.GRID_SIZE_X * self.CELL_SIZE
+        grid_height = self.GRID_SIZE_Y * self.CELL_SIZE
         self.setFixedSize(QSize(grid_width + 50, grid_height + 200)) # Addes extra pixels for some "pazass"
 
     def init_ui(self):
@@ -65,25 +76,25 @@ class SimulationUI(QMainWindow):
         input_layout = QHBoxLayout()
 
         # Create labels and inputboxes for the grid parameters
-        self.grid_size_x_label = QLabel("Length:")
-        self.grid_size_y_label = QLabel("Width:")
+        self.GRID_SIZE_Y_label = QLabel("Length:")
+        self.GRID_SIZE_X_label = QLabel("Width:")
         self.cell_size_label = QLabel("Tile Size In Px:")
 
         # Convert input to string because QLineEdit needs that
-        self.grid_size_x_input = QLineEdit(str(self.GRID_SIZE_X))
-        self.grid_size_y_input = QLineEdit(str(self.GRID_SIZE_Y))
+        self.GRID_SIZE_Y_input = QLineEdit(str(self.GRID_SIZE_Y))
+        self.GRID_SIZE_X_input = QLineEdit(str(self.GRID_SIZE_X))
         self.cell_size_input = QLineEdit(str(self.CELL_SIZE))
 
         # Connect inputdata with update_grid function
-        self.grid_size_x_input.returnPressed.connect(self.update_grid)
-        self.grid_size_y_input.returnPressed.connect(self.update_grid)
+        self.GRID_SIZE_Y_input.returnPressed.connect(self.update_grid)
+        self.GRID_SIZE_X_input.returnPressed.connect(self.update_grid)
         self.cell_size_input.returnPressed.connect(self.update_grid)
 
         # Add the widgets to the window
-        input_layout.addWidget(self.grid_size_x_label)
-        input_layout.addWidget(self.grid_size_x_input)
-        input_layout.addWidget(self.grid_size_y_label)
-        input_layout.addWidget(self.grid_size_y_input)
+        input_layout.addWidget(self.GRID_SIZE_Y_label)
+        input_layout.addWidget(self.GRID_SIZE_Y_input)
+        input_layout.addWidget(self.GRID_SIZE_X_label)
+        input_layout.addWidget(self.GRID_SIZE_X_input)
         input_layout.addWidget(self.cell_size_label)
         input_layout.addWidget(self.cell_size_input)
 
@@ -104,19 +115,27 @@ class SimulationUI(QMainWindow):
         self.buttons = []
 
         # Go through every row in the grid
-        for row in range(self.GRID_SIZE_X):
+        for row in range(self.GRID_SIZE_Y):
             row_buttons = [] # Create empty list to store the tiles in the list
             
             # Go through every colomn corrisponding to that row
-            for col in range(self.GRID_SIZE_Y):
+            for col in range(self.GRID_SIZE_X):
                 btn = QPushButton() # Create a tile for this cel
                 
                 # Set standard value for the cell, 
                 # If it's an outer wall its a "w" or black, 
                 # otherwise its a "." or white.
                 btn.setFixedSize(self.CELL_SIZE, self.CELL_SIZE)
-                btn.setStyleSheet(f"background-color: {COLORS[self.grid_data[row][col]]}")
-                btn.clicked.connect(lambda checked, r=row, c=col: self.toggle_tile(r, c)) # Connect the press of the button with the "Toggle_title" function
+                btn.setStyleSheet(f"""
+                                  QPushButton {{
+                                      background-color: {COLORS[self.grid_data[row][col]]};
+                                      border-color: {COLORS[self.grid_data[row][col]]};
+                                      border-radius: 0px;
+                                      margin: 1px;
+                                  }}
+                                  """)
+                # Connect the press of the button with the "Toggle_title" function
+                btn.clicked.connect(lambda checked, r=row, c=col: self.toggle_tile(r, c))
                 grid_layout.addWidget(btn, row, col)
                 row_buttons.append(btn)
             self.buttons.append(row_buttons)
@@ -130,40 +149,37 @@ class SimulationUI(QMainWindow):
 
         # Add the save button that outputs the current grid
         self.save_button = QPushButton("Save")
-        self.save_button.clicked.connect(self.start_simulation)
+        self.save_button.clicked.connect(self.format_as_json)
         main_layout.addWidget(self.save_button)
 
     # If the update grid button is pressed this function will activate and update the grid
     def update_grid(self):
-        try:
-            # Recieve the new grid values from the input boxes
-            new_grid_size_x = int(self.grid_size_x_input.text())
-            new_grid_size_y = int(self.grid_size_y_input.text())
-            new_cell_size = int(self.cell_size_input.text())
+        # Recieve the new grid values from the input boxes
+        new_GRID_SIZE_Y = int(self.GRID_SIZE_Y_input.text())
+        new_GRID_SIZE_X = int(self.GRID_SIZE_X_input.text())
+        new_cell_size = int(self.cell_size_input.text())
 
-            # If the values are different then the original ones, update the grid
-            if new_grid_size_x != self.GRID_SIZE_X or new_grid_size_y != self.GRID_SIZE_Y or new_cell_size != self.CELL_SIZE:
-                self.GRID_SIZE_X = new_grid_size_x
-                self.GRID_SIZE_Y = new_grid_size_y
-                self.CELL_SIZE = new_cell_size
+        # If the values are different then the original ones, update the grid
+        if new_GRID_SIZE_Y != self.GRID_SIZE_Y or new_GRID_SIZE_X != self.GRID_SIZE_X or new_cell_size != self.CELL_SIZE:
+            self.GRID_SIZE_Y = new_GRID_SIZE_Y
+            self.GRID_SIZE_X = new_GRID_SIZE_X
+            self.CELL_SIZE = new_cell_size
 
-                # Initialize the new grid
-                self.grid_data = [['.'] * self.GRID_SIZE_Y for _ in range(self.GRID_SIZE_X)]
-                
-                # Recalculate the wall grids and set values to "W" or black
-                for i in range(self.GRID_SIZE_X):
-                    self.grid_data[i][0] = 'W'
-                    self.grid_data[i][self.GRID_SIZE_Y - 1] = 'W'
-                for j in range(self.GRID_SIZE_Y):
-                    self.grid_data[0][j] = 'W'
-                    self.grid_data[self.GRID_SIZE_X - 1][j] = 'W'
+            # Initialize the new grid
+            self.grid_data = [['.'] * self.GRID_SIZE_X for _ in range(self.GRID_SIZE_Y)]
+            
+            # Recalculate the wall grids and set values to "W" or black
+            for i in range(self.GRID_SIZE_Y):
+                self.grid_data[i][0] = 'W'
+                self.grid_data[i][self.GRID_SIZE_X - 1] = 'W'
+            for j in range(self.GRID_SIZE_X):
+                self.grid_data[0][j] = 'W'
+                self.grid_data[self.GRID_SIZE_Y - 1][j] = 'W'
 
-                # Delete and recreate the tiles in the grid
-                self.buttons.clear()
-                self.clearLayout(self.layout())
-                self.init_ui()
-        except ValueError:
-            pass
+            # Delete and recreate the tiles in the grid
+            self.buttons.clear()
+            self.clearLayout(self.layout())
+            self.init_ui()
 
     # When the update_grid calculations are done,
     # This function will delete the old tiles in the window and add the now ones.
@@ -187,7 +203,14 @@ class SimulationUI(QMainWindow):
         self.grid_data[row][col] = next_type  # Updates grid
 
         # Applies color of the tile
-        self.buttons[row][col].setStyleSheet(f"background-color: {COLORS[next_type]}")  # Update de kleur
+        self.buttons[row][col].setStyleSheet(f"""
+                                  QPushButton {{
+                                      background-color: {COLORS[self.grid_data[row][col]]};
+                                      border-color: {COLORS[self.grid_data[row][col]]};
+                                      border-radius: 0px;
+                                      margin: 1px;
+                                  }}
+                                  """)  # Update de kleur
         self.update_console()
 
     def update_console(self):
@@ -198,10 +221,9 @@ class SimulationUI(QMainWindow):
         # Display the JSON-style representation in the QTextEdit (console output)
         self.console_output.setText(json_output)
 
-    def start_simulation(self):
+    def format_as_json(self):
         """
-        Start the simulation, this function prints the grid state at the beginning
-        and then runs the simulation, updating the grid accordingly.
+        Format the grid data as a JSON-style string and print it to the console.
         """
         # Generate the JSON-style grid text
         grid_text = ',\n'.join([f"'{''.join(row)}'" for row in self.grid_data])  # Each row as a string
