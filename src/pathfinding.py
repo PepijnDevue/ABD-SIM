@@ -9,12 +9,11 @@ class Pathfinder:
         self._exit_positions = self._get_exit_positions(grid)
         self._graph = self._setup_graph(grid)
 
-    def calculateshortestpath(self, pos, speed) -> list[tuple[int, int]]:
+    def calculateshortestpath(self, pos) -> list[tuple[int, int]]:
         closest_exit = self._find_closest_coordinate(pos, self._exit_positions)
     
         shortest_path = nx.shortest_path(self._graph, source=pos, target=closest_exit)
-        # Return the path from the current position to the exit, but skip cells if the agent is faster than 1
-        return shortest_path[speed:] if len(shortest_path) > speed else shortest_path[1:]
+        return shortest_path[1:]
 
     def _setup_graph(self, grid: mesa.space.SingleGrid) -> nx.Graph:
         graph = nx.Graph()

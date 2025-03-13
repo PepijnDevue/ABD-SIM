@@ -26,7 +26,9 @@ class Person(mesa.Agent):
 
     def step(self):
         # TODO: Utility functie voor het bewegen van de agent
-        new_position = self._model.pathfinder.calculateshortestpath(self.pos, self._speed)[0]
+        shortest_path = self._model.pathfinder.calculateshortestpath(self.pos)
+        new_position_idx = min(self._speed, len(shortest_path)) - 1
+        new_position = self._model.pathfinder.calculateshortestpath(self.pos)[new_position_idx]
 
         if self._cell_is_exit(new_position):
             self._remove()
@@ -65,9 +67,6 @@ class AbledPerson(Person):
     def __init__(self, model: mesa.Model):
         super().__init__(model)
         self._speed = 2
-        # TODO: Implement the willingness and perception radius
-        self._help_willingness = 1.0
-        self._help_perception_radius = 3
 
 class DisabledPerson(Person):
     """
