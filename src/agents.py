@@ -20,13 +20,15 @@ class Person(mesa.Agent):
     def __init__(self, model: mesa.Model):
         super().__init__(model)
         self._model = model
-
+        self._speed = 1
         # Spawn the agent at a random empty position
         self._model.grid.move_to_empty(self)
 
     def step(self):
         # TODO: Utility functie voor het bewegen van de agent
-        new_position = self._model.pathfinder.calculateshortestpath(self.pos)[0]
+        shortest_path = self._model.pathfinder.calculateshortestpath(self.pos)
+        new_position_idx = min(self._speed, len(shortest_path)) - 1
+        new_position = shortest_path[new_position_idx]
 
         if self._cell_is_exit(new_position):
             self._remove()
@@ -57,3 +59,19 @@ class Person(mesa.Agent):
         """
         self._model.grid.remove_agent(self)
         self._model.schedule.remove(self)
+
+class AbledPerson(Person):
+    """
+    Class that represents an able-bodied person in the grid derived from the Person class.
+    """
+    def __init__(self, model: mesa.Model):
+        super().__init__(model)
+        self._speed = 2
+
+class DisabledPerson(Person):
+    """
+    Class that represents a disabled person in the grid derived from the Person class.
+    """
+    def __init__(self, model: mesa.Model):
+        super().__init__(model)
+        self._speed = 1

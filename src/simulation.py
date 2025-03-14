@@ -1,7 +1,7 @@
 import mesa
 import networkx as nx
 
-from .agents import Person, Wall, Exit
+from .agents import AbledPerson, DisabledPerson, Wall, Exit
 
 from .activation import RandomActivation
 from .floor_plan import floor_plans
@@ -69,12 +69,18 @@ class Simulation(mesa.Model):
 
         return grid
 
-    def spawn_agents(self, num_agents: int=1) -> None:
+    def spawn_agents(self, num_agents: int=1, abled_to_disabled_ratio=0.95) -> None:
         """
         Spawn agents scattered around the grid.
         """
-        for _ in range(num_agents):
-            agent = Person(self)
+        # Spawn able agents
+        for _ in range(int(num_agents * abled_to_disabled_ratio)):
+            agent = AbledPerson(self)
+            self.schedule.add(agent)
+
+        # Spawn disabled agents
+        for _ in range(int(num_agents * (1 - abled_to_disabled_ratio))):
+            agent = DisabledPerson(self)
             self.schedule.add(agent)
 
     def step(self):

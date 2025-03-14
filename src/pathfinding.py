@@ -13,8 +13,8 @@ class Pathfinder:
         closest_exit = self._find_closest_coordinate(pos, self._exit_positions)
     
         shortest_path = nx.shortest_path(self._graph, source=pos, target=closest_exit)
-
         return shortest_path[1:]
+
 
     def _setup_graph(self, grid: mesa.space.SingleGrid) -> nx.Graph:
         graph = nx.Graph()
