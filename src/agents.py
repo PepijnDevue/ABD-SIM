@@ -28,7 +28,7 @@ class Person(mesa.Agent):
         # TODO: Utility functie voor het bewegen van de agent
         shortest_path = self._model.pathfinder.calculateshortestpath(self.pos)
         new_position_idx = min(self._speed, len(shortest_path)) - 1
-        new_position = self._model.pathfinder.calculateshortestpath(self.pos)[new_position_idx]
+        new_position = shortest_path[new_position_idx]
 
         if self._cell_is_exit(new_position):
             self._remove()
