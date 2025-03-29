@@ -21,6 +21,8 @@ class Person(mesa.Agent):
         super().__init__(model)
         self._model = model
         self._speed = 1
+        self.cluster = None
+        self.target_exit = None
         # Spawn the agent at a random empty position
         self._model.grid.move_to_empty(self)
 

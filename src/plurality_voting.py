@@ -1,0 +1,188 @@
+import mesa
+
+from .agents import Person
+
+class PluralityVoting:
+    """
+    Plurality voting algorithm for the simulation.
+    Each cluster of students votes for a common target-exit.
+    The target exit is the exit with the most votes.
+    """
+    def __init__(self, model: mesa.Model):
+        """
+        Initialize the plurality voting algorithm.
+
+        Args:
+            model: The mesa model containing the agents and grid.
+        """
+        self.clusters = {}
+
+        self._grid = model.grid
+        self._schedule = model.schedule
+        self._floor_plan = model.floor_plan
+
+    def run(self) -> None:
+        """
+        Setup the plurality voting algorithm for the simulation.
+        Cluster the agents based on their location in the grid.
+        Each cluster then votes for a common target-exit.
+        The target exit is the exit with the most votes.
+        """
+        # Clustering
+        self._create_room_clusters()
+        self._create_corridor_clusters()
+
+        # Pretty print the clusters
+        for cluster, agents in self.clusters.items():
+            print(f"Cluster {cluster}: {len(agents)} agents")
+
+        for agent in self._schedule:
+            print(f"Agent {agent.unique_id} in cluster {agent.cluster}")
+
+        # Voting
+        self._plurality_voting()
+
+        input("Press Enter to continue...")
+
+        return self.clusters
+
+    def _create_room_clusters(self) -> None:
+        """
+        Create clusters of students based on the classroom layout.
+        Each cluster is a group of students in the same classroom.
+        """
+        for agent in self._schedule:
+            x, y = agent.pos
+            cluster = self._floor_plan[y][x]
+
+            # Check for classroom
+            if cluster == '.':
+                continue
+
+            # Assign cluster to the agent
+            agent.cluster = cluster
+
+            # Add agent to the clusters
+            if cluster not in self.clusters:
+                self.clusters[cluster] = []
+            self.clusters[cluster].append(agent)
+
+    def _link_agent_to_cluster(self, agent: Person, cluster: str) -> None:
+        """
+        Connect the agent to the cluster.
+    
+        Args:
+            agent: The agent to connect.
+            cluster: The cluster to connect to.
+        """
+        if cluster not in self.clusters:
+            self.clusters[cluster] = []
+
+        self.clusters[cluster].append(agent)
+
+        agent.cluster = cluster
+
+    def _create_corridor_clusters(self) -> None:
+        """
+        Create clusters of students located in the corridors.
+        Using Kmeans clustering algorithm.
+        """
+        curr_cluster_id = 0
+
+        for agent in self._schedule:
+            if agent.cluster:
+                continue
+
+            curr_cluster_id += 1
+
+            self._add_corridor_cluster(curr_cluster_id, agent)
+
+    def _add_corridor_cluster(self, curr_cluster_id, agent):
+        """
+        Add a cluster of students located in the corridors.
+        Using Kmeans clustering algorithm.
+        
+        Args:
+            curr_cluster_id: The id of the current cluster.
+            agent: The agent to add to the cluster.
+        """
+        cluster_name = f"c_{curr_cluster_id}"
+        positions = [agent.pos]
+
+        search_radius = 4
+        max_iter = 10
+
+        self._link_agent_to_cluster(agent, cluster_name)
+
+        for _ in range(max_iter):
+            centroid = self._calc_centroid(positions)
+
+            # find all agents in the search radius
+            search_area = self._grid.get_neighbors(
+                centroid,
+                moore=False,
+                include_center=False,
+                radius=search_radius
+            )
+
+            search_area = self._filter_neighbours(search_area)
+
+            if len(search_area) == 0:
+                break
+
+            # Add the agents to the cluster
+            for person in search_area:
+                positions.append(person.pos)
+                self._link_agent_to_cluster(person, cluster_name)
+
+    def _filter_neighbours(self, search_area: list) -> list:
+        """
+        Filter the search area to only include Person-agents that are not in a cluster.
+
+        Args:
+            search_area: The list of agents in the search area.
+
+        Returns:
+            list: The filtered list of agents.
+        """
+        filtered_neighbours = []
+
+        for obj in search_area:
+            if not isinstance(obj, Person):
+                continue
+
+            if obj.cluster:
+                continue
+
+            filtered_neighbours.append(obj)
+
+        return filtered_neighbours
+            
+    def _calc_centroid(self, positions: list) -> tuple:
+        """
+        Calculate the centroid of a set of positions.
+
+        Args:
+            positions: List of positions
+
+        Returns:
+            tuple: The centroid position
+        """
+        centroid = []
+        dimensions = len(positions[0])
+
+        for dim_idx in range(dimensions):
+            # Calculate the average position for each dimension
+            total_pos = sum([pos[dim_idx] for pos in positions])
+            avg_pos = total_pos / len(positions)
+
+            # Round the average position to the nearest integer
+            avg_pos = round(avg_pos)
+
+            centroid.append(avg_pos)
+
+        return tuple(centroid)
+
+    def _plurality_voting(self) -> None:
+        # TODO
+        pass
