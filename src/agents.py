@@ -1,4 +1,5 @@
 import mesa
+import random
 
 """
 Class that represents an Exit in the grid.
@@ -27,33 +28,39 @@ class Person(mesa.Agent):
         self._model.grid.move_to_empty(self)
 
     def step(self):
-        # TODO: Utility functie voor het bewegen van de agent
-        shortest_path = self._model.pathfinder.calculateshortestpath(self.pos)
+        """
+        Step function for the agent.
+        The agent moves towards the target exit.
+        """
+        shortest_path = self._model.pathfinder.calculate_shortest_path(self.pos, self.target_exit)
+
         new_position_idx = min(self._speed, len(shortest_path)) - 1
         new_position = shortest_path[new_position_idx]
 
-        if self._cell_is_exit(new_position):
+        if self._model.grid._cell_is_exit(new_position):
             self._remove()
             self.model.log_agent_evacuate_time()
             
         elif self._model.grid.is_cell_empty(new_position):
             self._model.grid.move_agent(self, new_position)
 
-    def _cell_is_exit(self, position: tuple) -> bool:
+    def vote_exit(self) -> None:
         """
-        Check if a cell on a given position is an exit cell
-
-        Args:
-            position: The coordinates of the cell
-
-        Returns:
-            bool: True if the cell contains an exit agent
+        Vote for a target exit, for the plurality voting algorithm.
+        The target exit is a probability distribution of the exits in the grid.
         """
-        is_empty = self._model.grid.is_cell_empty(position)
+        sorted_exits, sorted_distances = self._model.pathfinder.get_exits(self.pos)
+        
+        # total_distance = sum(sorted_distances)
 
-        cell_content = self._model.grid.get_cell_list_contents(position)
+        # probabilities = [distance/total_distance for distance in sorted_distances]
 
-        return not is_empty and isinstance(cell_content[0], Exit)
+        # chosen_exit = random.choices(sorted_exits, weights=probabilities, k=1)[0]
+        # TODO: Als je dit wel goed kiest met voting komen er opstoppingen van mensen die langs elkaar willen
+        # Probleem voor vinden en terugzetten
+        chosen_exit = sorted_exits[0]
+
+        return chosen_exit
     
     def _remove(self) -> None:
         """

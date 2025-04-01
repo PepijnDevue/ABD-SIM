@@ -1,5 +1,7 @@
 import mesa
 
+import numpy as np
+
 from .agents import Person
 
 class PluralityVoting:
@@ -32,19 +34,8 @@ class PluralityVoting:
         self._create_room_clusters()
         self._create_corridor_clusters()
 
-        # Pretty print the clusters
-        for cluster, agents in self.clusters.items():
-            print(f"Cluster {cluster}: {len(agents)} agents")
-
-        for agent in self._schedule:
-            print(f"Agent {agent.unique_id} in cluster {agent.cluster}")
-
         # Voting
         self._plurality_voting()
-
-        input("Press Enter to continue...")
-
-        return self.clusters
 
     def _create_room_clusters(self) -> None:
         """
@@ -168,21 +159,57 @@ class PluralityVoting:
         Returns:
             tuple: The centroid position
         """
-        centroid = []
-        dimensions = len(positions[0])
-
-        for dim_idx in range(dimensions):
-            # Calculate the average position for each dimension
-            total_pos = sum([pos[dim_idx] for pos in positions])
-            avg_pos = total_pos / len(positions)
-
-            # Round the average position to the nearest integer
-            avg_pos = round(avg_pos)
-
-            centroid.append(avg_pos)
-
-        return tuple(centroid)
+        # Calculate the average position for each dimension
+        centroid = np.mean(positions, axis=0)
+        
+        # Round the average position to the nearest integer and convert to tuple
+        centroid = tuple(np.round(centroid).astype(int))
+        
+        return centroid
 
     def _plurality_voting(self) -> None:
-        # TODO
-        pass
+        """
+        Run the plurality voting algorithm.
+        Each cluster of students votes for a common target-exit.
+        The target exit is the exit with the most votes.
+        """
+        for cluster, agents in self.clusters.items():
+            self._vote_cluster(cluster, agents)
+
+    def _vote_cluster(self,
+                      cluster: str,
+                      agents: list[Person]) -> None:
+        """
+        Run the plurality voting algorithm for a cluster of agents.
+
+        Args:
+            cluster: The name of the cluster.
+            agents: The agents in the cluster.
+        """
+        cluster_votes = {}
+        for agent in agents:
+            agent_vote = agent.vote_exit()
+
+            # Add the vote to the cluster votes
+            if agent_vote in cluster_votes:
+                cluster_votes[agent_vote] += 1
+            else:
+                cluster_votes[agent_vote] = 1
+
+        most_voted_exit = max(cluster_votes, key=cluster_votes.get)
+
+        self._assign_target_exit(agents, most_voted_exit)
+
+    def _assign_target_exit(self,
+                            agents: list[Person], 
+                            most_voted_exit: tuple[int, int]
+                            ) -> None:
+        """
+        Assign the target exit to the agents in the cluster.
+
+        Args:
+            agents: The agents in the cluster.
+            most_voted_exit: The exit with the most votes.
+        """
+        for agent in agents:
+            agent.target_exit = most_voted_exit

@@ -1,15 +1,17 @@
 import mesa
 
-from .agents import AbledPerson, DisabledPerson, Wall, Exit
+from .agents import AbledPerson, DisabledPerson
 
 from .plurality_voting import PluralityVoting
 from .activation import RandomActivation
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
+from .grid import Grid
 from .log import log_sim
 
-from .ui import show_grid
 import time
+
+from .ui import show_grid
 
 class Simulation(mesa.Model):
     """
@@ -28,7 +30,7 @@ class Simulation(mesa.Model):
 
         self.floor_plan = floor_plans[floor_plan]
 
-        self.grid = self.setup_grid()
+        self.grid = Grid(self, self.floor_plan)
 
         self.pathfinder = Pathfinder(self.grid)
 
@@ -50,27 +52,6 @@ class Simulation(mesa.Model):
             self._step_count
         )
 
-    def setup_grid(self) -> mesa.space.SingleGrid:
-        """
-        Read the building map and create a grid with walls and exits.
-
-        Returns:
-            SingleGrid: The grid with walls and exits.
-        """
-        width = len(self.floor_plan[0])
-        height = len(self.floor_plan)
-
-        grid = mesa.space.SingleGrid(width, height, torus=False)
-
-        for y in range(height):
-            for x in range(width):
-                if self.floor_plan[y][x] == 'W':
-                    grid.place_agent(Wall(self), (x, y))
-                elif self.floor_plan[y][x] == 'E':
-                    grid.place_agent(Exit(self), (x, y))
-
-        return grid
-
     def spawn_agents(self, num_agents: int=1, abled_to_disabled_ratio=0.95) -> None:
         """
         Spawn agents scattered around the grid.
@@ -90,6 +71,9 @@ class Simulation(mesa.Model):
         Simulate one timestep of the simulation.
         """
         self.schedule.step()
+
+        # time.sleep(0.2)
+
         self._step_count += 1
 
     def run(self, max_time_steps: int=100):
@@ -107,8 +91,6 @@ class Simulation(mesa.Model):
             show_grid(self.grid, cls=True)
 
             self.step()
-
-            time.sleep(0.2)
 
             if self.schedule.is_empty():
                 show_grid(self.grid, cls=True)
