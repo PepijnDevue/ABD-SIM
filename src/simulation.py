@@ -3,6 +3,7 @@ import mesa
 from .agents import AbledPerson, DisabledPerson
 
 from .plurality_voting import PluralityVoting
+from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
@@ -17,7 +18,7 @@ class Simulation(mesa.Model):
     """
     Simulation class for the evacuating a building.
     """
-    def __init__(self, floor_plan: str, num_agents: int=5):
+    def __init__(self, floor_plan: str, distribution_settings: dict[str, float], num_agents: int=5):
         """
         Setup the simulation with a grid, agents and schedule.
 
@@ -36,7 +37,11 @@ class Simulation(mesa.Model):
 
         self.plurality_voting = PluralityVoting(self)
 
+        self.distribution_settings = distribution_settings
+
         self.spawn_agents(num_agents)
+
+        self.cnp = ContractNetProtocol(self)
 
         self._step_count = 0
 
@@ -83,12 +88,14 @@ class Simulation(mesa.Model):
         Args:
             max_time_steps: The number of timesteps to run the simulation for.
         """
-        # TODO: Pairing CNP
-
         self.plurality_voting.run()
+
+        self.cnp.run()
 
         for _ in range(max_time_steps):
             show_grid(self.grid, cls=True)
+
+            time.sleep(1)
 
             self.step()
 

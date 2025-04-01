@@ -1,5 +1,5 @@
 import mesa
-import random
+import numpy as np
 
 """
 Class that represents an Exit in the grid.
@@ -33,6 +33,10 @@ class Person(mesa.Agent):
         The agent moves towards the target exit.
         """
         shortest_path = self._model.pathfinder.calculate_shortest_path(self.pos, self.target_exit)
+
+        # If speed is 0 or the shortest path is empty, the agent does not move
+        if self._speed == 0 or len(shortest_path) == 0:
+            return
 
         new_position_idx = min(self._speed, len(shortest_path)) - 1
         new_position = shortest_path[new_position_idx]
@@ -75,6 +79,9 @@ class AbledPerson(Person):
     """
     def __init__(self, model: mesa.Model):
         super().__init__(model)
+        self._morality_mean = model.distribution_settings["mean"]
+        self._morality_std = model.distribution_settings["std"]
+        self.morality = round(float(np.clip(np.random.normal(self._morality_mean, self._morality_std), 0, 1)), 2)
         self._speed = 2
 
 class DisabledPerson(Person):
@@ -83,4 +90,4 @@ class DisabledPerson(Person):
     """
     def __init__(self, model: mesa.Model):
         super().__init__(model)
-        self._speed = 1
+        self._speed = 0
