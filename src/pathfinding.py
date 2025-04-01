@@ -8,13 +8,53 @@ class Pathfinder:
     def __init__(self, grid: mesa.space.SingleGrid):
         self._exit_positions = self._get_exit_positions(grid)
         self._graph = self._setup_graph(grid)
-
-    def calculateshortestpath(self, pos) -> list[tuple[int, int]]:
-        closest_exit = self._find_closest_coordinate(pos, self._exit_positions)
     
-        shortest_path = nx.shortest_path(self._graph, source=pos, target=closest_exit)
-        return shortest_path[1:]
+    def calculate_shortest_path(self, 
+                                from_pos: tuple[int, int], 
+                                to_pos: tuple[int, int]
+                                ) -> list[tuple[int, int]]:
+        """
+        Calculate the shortest path from one position to another using Dijkstra's algorithm.
+        """ 
+        shortest_path = nx.shortest_path(self._graph, source=from_pos, target=to_pos)
 
+        return shortest_path[1:]
+    
+    def get_exits(self, from_pos: tuple[int, int]) -> list[tuple[int, int]]:
+        """
+        Get the exits sorted by distance from the given position.
+        
+        Args:
+            from_pos: The position to get the exits from.
+
+        Returns:
+            list: A list of exit positions sorted by distance from the given position.
+        """
+        exit_distances = self._get_exit_distances(from_pos)
+
+        exit_distance_pairs = zip(self._exit_positions, exit_distances)
+
+        sorted_exit_pairs = sorted(exit_distance_pairs, key=lambda x: x[1])
+
+        # Unzip the sorted pairs into two separate lists
+        sorted_exits, sorted_distances = zip(*sorted_exit_pairs)
+
+        return sorted_exits, sorted_distances
+
+    def _get_exit_distances(self, from_pos):
+        """
+        Get the distances to all exits from a given position.
+        """
+        exit_distances = []
+
+        for exit_pos in self._exit_positions:
+            path = nx.shortest_path(self._graph, source=from_pos, target=exit_pos)
+
+            distance = len(path) - 1
+
+            exit_distances.append(distance)  
+
+        return exit_distances
 
     def _setup_graph(self, grid: mesa.space.SingleGrid) -> nx.Graph:
         graph = nx.Graph()

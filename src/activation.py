@@ -8,6 +8,12 @@ class RandomActivation:
         self._model = model
         self._agents = {}
 
+    def __iter__(self):
+        """
+        Iterate over the agents in random order.
+        """
+        return iter(self._agents.values())
+
     def add(self, agent: mesa.Agent) -> None:
         """
         Add an agent to the activation schedule.
