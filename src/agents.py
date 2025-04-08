@@ -78,14 +78,19 @@ class Person(mesa.Agent):
         """
         sorted_exits, sorted_distances = self._model.pathfinder.get_exits(self.pos)
         
-        # total_distance = sum(sorted_distances)
+        # Invert the distances to weights - the smaller the distance, the higher the weight
+        weights = [1 / distance for distance in sorted_distances]
 
-        # probabilities = [distance/total_distance for distance in sorted_distances]
+        # Steepen the weights
+        # alpha = 3.14159
+        alpha = 31.4159 # TODO: terug naar 3.14159 en voting toevoegen
+        weights = [weight ** alpha for weight in weights]
 
-        # chosen_exit = random.choices(sorted_exits, weights=probabilities, k=1)[0]
-        # TODO: Als je dit wel goed kiest met voting komen er opstoppingen van mensen die langs elkaar willen
-        # Probleem voor vinden en terugzetten
-        chosen_exit = sorted_exits[0]
+        sum_of_weights = sum(weights)
+
+        probabilities = [weight/sum_of_weights for weight in weights]
+
+        chosen_exit = random.choices(sorted_exits, weights=probabilities, k=1)[0]
 
         return chosen_exit
     
