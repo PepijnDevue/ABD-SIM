@@ -1,5 +1,6 @@
 import mesa
 import numpy as np
+import random
 
 """
 Class that represents an Exit in the grid.
@@ -100,6 +101,28 @@ class Person(mesa.Agent):
         """
         self._model.grid.remove_agent(self)
         self._model.schedule.remove(self)
+
+    def get_approved_exits(self) -> list[tuple[int, int]]:
+        """
+        Returns a list of exits that the agent approves of.
+        An exit is approved if it's within an acceptable distance threshold.
+        """
+        exits, distances = self.model.pathfinder.get_exits(self.pos)
+        
+        # Safety check: if no exits/distances found, return empty list
+        if not distances:
+            return []
+        
+        approved_exits = []
+        
+        # Approve exits within 150% of the closest exit's distance
+        threshold = distances[0] * 1.5
+        
+        for exit_pos, distance in zip(exits, distances):
+            if distance <= threshold:
+                approved_exits.append(exit_pos)
+        
+        return approved_exits
 
 class AbledPerson(Person):
     """

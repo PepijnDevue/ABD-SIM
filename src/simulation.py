@@ -2,7 +2,7 @@ import mesa
 
 from .agents import AbledPerson, DisabledPerson
 
-from .plurality_voting import PluralityVoting
+from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting
 from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .floor_plan import floor_plans
@@ -18,12 +18,18 @@ class Simulation(mesa.Model):
     """
     Simulation class for the evacuating a building.
     """
-    def __init__(self, floor_plan: str, distribution_settings: dict[str, float], num_agents: int=5):
+    def __init__(self, 
+                 floor_plan: str, 
+                 distribution_settings: dict[str, float], 
+                 voting_method: str = "plurality",
+                 num_agents: int = 5):
         """
         Setup the simulation with a grid, agents and schedule.
 
         Args:
             floor_plan: The used floorplan_name
+            distribution_settings: Settings for agent distribution
+            voting_method: The voting method to use ("plurality" or "approval")
             num_agents: The number of agents to spawn
         """
         super().__init__()
@@ -35,7 +41,8 @@ class Simulation(mesa.Model):
 
         self.pathfinder = Pathfinder(self.grid)
 
-        self.plurality_voting = PluralityVoting(self)
+        # Initialize voting method based on parameter
+        self.voting_method = self._setup_voting_method(voting_method)
 
         self.distribution_settings = distribution_settings
 
@@ -48,6 +55,24 @@ class Simulation(mesa.Model):
         self._exit_times = []
 
         show_grid(self.grid)
+
+    def _setup_voting_method(self, method: str) -> VotingMethod:
+        """
+        Setup the voting method based on the input parameter.
+        
+        Args:
+            method: The voting method to use ("plurality" or "approval")
+            
+        Returns:
+            VotingMethod: The initialized voting method
+        """
+        method = method.lower()
+        if method == "approval":
+            return ApprovalVoting(self)
+        elif method == "plurality":
+            return PluralityVoting(self)
+        else:
+            raise ValueError(f"Unknown voting method: {method}. Use 'plurality' or 'approval'")
 
     def log_agent_evacuate_time(self):
         """
@@ -80,7 +105,7 @@ class Simulation(mesa.Model):
         """
         self.cnp.run()
 
-        self.plurality_voting.run()
+        self.voting_method.run()
 
         while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)
@@ -94,7 +119,12 @@ class Simulation(mesa.Model):
         show_grid(self.grid, cls=True)
 
         print("Simulation completed...")
-        log_sim(self._exit_times, self._step_count, len(self.schedule))
+        log_sim(
+            self._exit_times, 
+            self._step_count, 
+            len(self.schedule), 
+            voting_method=self.voting_method.__class__.__name__
+        )
 
     def _is_finished(self, max_time_steps: int) -> bool:
         """

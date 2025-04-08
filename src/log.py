@@ -3,7 +3,8 @@ import json
 
 def log_sim(evac_times: list[int],
             total_evac_time: int,
-            num_agents_left: int
+            num_agents_left: int,
+            voting_method: str
             ) -> None:
     """
     Log the simulation data, save as log_n.json
@@ -15,6 +16,7 @@ def log_sim(evac_times: list[int],
     log_num = read_increment_log_count()
 
     data = {
+        "voting_method": voting_method,
         "exit_times": evac_times,
         "avg_evacuation_time": sum(evac_times) / len(evac_times),
         "total_evacuation_time": total_evac_time,

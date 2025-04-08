@@ -1,41 +1,43 @@
+from abc import ABC, abstractmethod
 import mesa
-
 import numpy as np
-
 from .agents import Person
 
-class PluralityVoting:
-    """
-    Plurality voting algorithm for the simulation.
-    Each cluster of students votes for a common target-exit.
-    The target exit is the exit with the most votes.
-    """
+class VotingMethod(ABC):
+    """Abstract base class for voting methods."""
+    
     def __init__(self, model: mesa.Model):
         """
-        Initialize the plurality voting algorithm.
+        Initialize the voting method.
 
         Args:
             model: The mesa model containing the agents and grid.
         """
         self.clusters = {}
-
         self._grid = model.grid
         self._schedule = model.schedule
         self._floor_plan = model.floor_plan
 
+    @abstractmethod
+    def _vote_cluster(self, cluster: str, agents: list[Person]) -> None:
+        """Abstract method for cluster voting logic."""
+        pass
+
     def run(self) -> None:
         """
-        Setup the plurality voting algorithm for the simulation.
-        Cluster the agents based on their location in the grid.
-        Each cluster then votes for a common target-exit.
-        The target exit is the exit with the most votes.
+        Execute the voting process for the simulation.
+        Agents are clustered based on their location in the grid.
+        Each cluster votes for a common target exit, which is determined
+        based on the specific voting method implemented.
         """
-        # Clustering
         self._create_room_clusters()
         self._create_corridor_clusters()
+        self._run_voting()
 
-        # Voting
-        self._plurality_voting()
+    def _run_voting(self) -> None:
+        """Run the voting for all clusters."""
+        for cluster, agents in self.clusters.items():
+            self._vote_cluster(cluster, agents)
 
     def _create_room_clusters(self) -> None:
         """
@@ -171,20 +173,17 @@ class PluralityVoting:
         
         return centroid
 
-    def _plurality_voting(self) -> None:
-        """
-        Run the plurality voting algorithm.
-        Each cluster of students votes for a common target-exit.
-        The target exit is the exit with the most votes.
-        """
-        for cluster, agents in self.clusters.items():
-            self._vote_cluster(cluster, agents)
+    def _assign_target_exit(self, agents: list[Person], target_exit: tuple[int, int]) -> None:
+        """Assign the chosen exit to all agents in the cluster."""
+        for agent in agents:
+            agent.target_exit = target_exit
 
-    def _vote_cluster(self,
-                      cluster: str,
-                      agents: list[Person]) -> None:
+class PluralityVoting(VotingMethod):
+    """Implementation of plurality voting method."""
+
+    def _vote_cluster(self, cluster: str, agents: list[Person]) -> None:
         """
-        Run the plurality voting algorithm for a cluster of agents.
+        Run the plurality voting for a cluster of agents.
 
         Args:
             cluster: The name of the cluster.
@@ -194,26 +193,35 @@ class PluralityVoting:
         for agent in agents:
             agent_vote = agent.vote_exit()
 
-            # Add the vote to the cluster votes
             if agent_vote in cluster_votes:
                 cluster_votes[agent_vote] += 1
             else:
                 cluster_votes[agent_vote] = 1
 
         most_voted_exit = max(cluster_votes, key=cluster_votes.get)
-
         self._assign_target_exit(agents, most_voted_exit)
 
-    def _assign_target_exit(self,
-                            agents: list[Person], 
-                            most_voted_exit: tuple[int, int]
-                            ) -> None:
+class ApprovalVoting(VotingMethod):
+    """Implementation of approval voting method."""
+
+    def _vote_cluster(self, cluster: str, agents: list[Person]) -> None:
         """
-        Assign the target exit to the agents in the cluster.
+        Run the approval voting for a cluster of agents.
 
         Args:
+            cluster: The name of the cluster.
             agents: The agents in the cluster.
-            most_voted_exit: The exit with the most votes.
         """
+        approval_scores = {}
+        
         for agent in agents:
-            agent.target_exit = most_voted_exit
+            approved_exits = agent.get_approved_exits()
+            
+            for exit in approved_exits:
+                if exit in approval_scores:
+                    approval_scores[exit] += 1
+                else:
+                    approval_scores[exit] = 1
+
+        most_approved_exit = max(approval_scores, key=approval_scores.get)
+        self._assign_target_exit(agents, most_approved_exit)
