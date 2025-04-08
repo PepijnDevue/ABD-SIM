@@ -43,10 +43,14 @@ class PluralityVoting:
         Each cluster is a group of students in the same classroom.
         """
         for agent in self._schedule:
+            # Skip if the agent is already in a cluster
+            if agent.cluster:
+                continue
+
             x, y = agent.pos
             cluster = self._floor_plan[y][x]
 
-            # Check for classroom
+            # Skip if the agent is not in a room
             if cluster == '.':
                 continue
 

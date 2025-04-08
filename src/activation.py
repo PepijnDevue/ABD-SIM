@@ -13,6 +13,12 @@ class RandomActivation:
         Iterate over the agents in random order.
         """
         return iter(self._agents.values())
+    
+    def __len__(self) -> int:
+        """
+        Return the number of agents in the activation list.
+        """
+        return len(self._agents)
 
     def add(self, agent: mesa.Agent) -> None:
         """

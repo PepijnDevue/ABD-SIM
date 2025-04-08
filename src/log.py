@@ -1,7 +1,10 @@
 import os
 import json
 
-def log_sim(evac_times: list[int], total_evac_time: int) -> None:
+def log_sim(evac_times: list[int],
+            total_evac_time: int,
+            num_agents_left: int
+            ) -> None:
     """
     Log the simulation data, save as log_n.json
 
@@ -14,7 +17,8 @@ def log_sim(evac_times: list[int], total_evac_time: int) -> None:
     data = {
         "exit_times": evac_times,
         "avg_evacuation_time": sum(evac_times) / len(evac_times),
-        "total_evacuation_time": total_evac_time
+        "total_evacuation_time": total_evac_time,
+        "num_agents_left": num_agents_left
         }
     
     write_log(log_num, data)
