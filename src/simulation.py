@@ -5,6 +5,7 @@ from .agents import AbledPerson, DisabledPerson
 from .plurality_voting import PluralityVoting
 from .cnp import ContractNetProtocol
 from .activation import RandomActivation
+from .clustering import Clusters
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
 from .grid import Grid
@@ -35,17 +36,23 @@ class Simulation(mesa.Model):
 
         self.pathfinder = Pathfinder(self.grid)
 
-        self.plurality_voting = PluralityVoting(self)
-
         self.distribution_settings = distribution_settings
 
         self.spawn_agents(num_agents)
 
-        self.cnp = ContractNetProtocol(self)
-
         self._step_count = 0
 
         self._exit_times = []
+
+        self.clusters = Clusters()
+
+        self.cnp = ContractNetProtocol(self)
+
+        self.plurality_voting = PluralityVoting(self)
+
+        for agent in self.schedule:
+            if not agent.target_exit:
+                print("No target exit for agent:", agent.unique_id)
 
         show_grid(self.grid)
 

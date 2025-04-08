@@ -17,7 +17,8 @@ class ContractNetProtocol:
         Args:
             model: The mesa model containing the agents and grid.
         """
-        self.model = model
+        self._model = model
+        self._clusters = model.clusters
         self._floor_plan = model.floor_plan
         self._grid = model.grid
         self._agents = model.schedule._agents
@@ -69,9 +70,9 @@ class ContractNetProtocol:
         best_contractor.target_exit = disabled_agent.target_exit
 
         cluster_name = f"pair_{couple_id}"
-        best_contractor.cluster = cluster_name
-        disabled_agent.cluster = cluster_name
-        
+        self._clusters.add_to_cluster(cluster_name, disabled_agent)
+        self._clusters.add_to_cluster(cluster_name, best_contractor)
+
         best_contractor.speed = 1
         disabled_agent.speed = 1
 

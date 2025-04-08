@@ -17,8 +17,7 @@ class PluralityVoting:
         Args:
             model: The mesa model containing the agents and grid.
         """
-        self.clusters = {}
-
+        self._clusters = model.clusters
         self._grid = model.grid
         self._schedule = model.schedule
         self._floor_plan = model.floor_plan
@@ -37,6 +36,16 @@ class PluralityVoting:
         # Voting
         self._plurality_voting()
 
+    def revote(self, cluster_a: str, cluster_b: str) -> None:
+        """
+        Two clusters meet and combine, they need to revote for a target exit.
+        The clusters are merged and the agents in the clusters are assigned to the new cluster.
+        """
+        print("Revote:")
+        merged_cluster = self._clusters.merge_clusters(cluster_a, cluster_b)
+
+        self._vote_cluster(merged_cluster)
+
     def _create_room_clusters(self) -> None:
         """
         Create clusters of students based on the classroom layout.
@@ -54,28 +63,8 @@ class PluralityVoting:
             if cluster == '.':
                 continue
 
-            # Assign cluster to the agent
-            agent.cluster = cluster
-
             # Add agent to the clusters
-            if cluster not in self.clusters:
-                self.clusters[cluster] = []
-            self.clusters[cluster].append(agent)
-
-    def _link_agent_to_cluster(self, agent: Person, cluster: str) -> None:
-        """
-        Connect the agent to the cluster.
-    
-        Args:
-            agent: The agent to connect.
-            cluster: The cluster to connect to.
-        """
-        if cluster not in self.clusters:
-            self.clusters[cluster] = []
-
-        self.clusters[cluster].append(agent)
-
-        agent.cluster = cluster
+            self._clusters.add_to_cluster(cluster, agent)
 
     def _create_corridor_clusters(self) -> None:
         """
@@ -107,7 +96,7 @@ class PluralityVoting:
         search_radius = 4
         max_iter = 10
 
-        self._link_agent_to_cluster(agent, cluster_name)
+        self._clusters.add_to_cluster(cluster_name, agent)
 
         for _ in range(max_iter):
             centroid = self._calc_centroid(positions)
@@ -128,7 +117,7 @@ class PluralityVoting:
             # Add the agents to the cluster
             for person in search_area:
                 positions.append(person.pos)
-                self._link_agent_to_cluster(person, cluster_name)
+                self._clusters.add_to_cluster(cluster_name, person)
 
     def _filter_neighbours(self, search_area: list) -> list:
         """
@@ -177,11 +166,10 @@ class PluralityVoting:
         Each cluster of students votes for a common target-exit.
         The target exit is the exit with the most votes.
         """
-        for cluster, agents in self.clusters.items():
-            self._vote_cluster(cluster, agents)
+        for agents in self._clusters:
+            self._vote_cluster(agents)
 
     def _vote_cluster(self,
-                      cluster: str,
                       agents: list[Person]) -> None:
         """
         Run the plurality voting algorithm for a cluster of agents.

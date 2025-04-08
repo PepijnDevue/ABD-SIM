@@ -32,21 +32,30 @@ class Person(mesa.Agent):
         Step function for the agent.
         The agent moves towards the target exit.
         """
-        shortest_path = self.get_exit_path()
+        path_to_exit = self.get_exit_path()
 
-        # If speed is 0 or the shortest path is empty, the agent does not move
-        if self.speed == 0 or len(shortest_path) == 0:
+        if self.speed == 0 or not path_to_exit:
             return
 
-        new_position_idx = min(self.speed, len(shortest_path)) - 1
-        new_position = shortest_path[new_position_idx]
+        # Find the agent's new position based on its speed
+        target_idx = min(self.speed, len(path_to_exit)) - 1
+        target_pos = path_to_exit[target_idx]
 
-        if self._model.grid._cell_is_exit(new_position):
+        # Remove the agent if it is at the exit
+        if self._model.grid._cell_is_exit(target_pos):
             self._remove()
             self.model.log_agent_evacuate_time()
-            
-        elif self._model.grid.is_cell_empty(new_position):
-            self._model.grid.move_agent(self, new_position)
+            return
+        
+        # If the new position is empty, move the agent to the new position
+        if self._model.grid.is_cell_empty(target_pos):
+            self._model.grid.move_agent(self, target_pos)
+            return
+        
+        # If the other agent is in another cluster and has a different target exit, merge the clusters
+        other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
+        if other_agent.target_exit != self.target_exit:
+            self._model.plurality_voting.revote(self.cluster, other_agent.cluster)
 
     def get_exit_path(self) -> list[tuple[int, int]]:
         """
@@ -56,6 +65,9 @@ class Person(mesa.Agent):
         Returns:
             list[tuple[int, int]]: The path to the target exit.
         """
+        if not self.target_exit:
+            return None
+
         return self._model.pathfinder.calculate_shortest_path(self.pos, self.target_exit)
     
     def get_path_to(self, target: tuple[int, int]) -> list[tuple[int, int]]:
@@ -71,7 +83,7 @@ class Person(mesa.Agent):
         """
         return self._model.pathfinder.calculate_shortest_path(self.pos, target)
 
-    def vote_exit(self) -> None:
+    def vote_exit(self) -> tuple[int, int]:
         """
         Vote for a target exit, for the plurality voting algorithm.
         The target exit is a probability distribution of the exits in the grid.
@@ -82,15 +94,15 @@ class Person(mesa.Agent):
         weights = [1 / distance for distance in sorted_distances]
 
         # Steepen the weights
-        # alpha = 3.14159
-        alpha = 31.4159 # TODO: terug naar 3.14159 en voting toevoegen
+        alpha = 3.14159
         weights = [weight ** alpha for weight in weights]
 
         sum_of_weights = sum(weights)
 
         probabilities = [weight/sum_of_weights for weight in weights]
 
-        chosen_exit = random.choices(sorted_exits, weights=probabilities, k=1)[0]
+        chosen_exit_idx = np.random.choice(len(sorted_exits), p=probabilities)
+        chosen_exit = sorted_exits[chosen_exit_idx]
 
         return chosen_exit
     
