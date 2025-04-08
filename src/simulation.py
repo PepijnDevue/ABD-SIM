@@ -3,6 +3,7 @@ import mesa
 from .agents import AbledPerson, DisabledPerson
 
 from .plurality_voting import PluralityVoting
+from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
@@ -17,7 +18,7 @@ class Simulation(mesa.Model):
     """
     Simulation class for the evacuating a building.
     """
-    def __init__(self, floor_plan: str, num_agents: int=5):
+    def __init__(self, floor_plan: str, distribution_settings: dict[str, float], num_agents: int=5):
         """
         Setup the simulation with a grid, agents and schedule.
 
@@ -36,7 +37,11 @@ class Simulation(mesa.Model):
 
         self.plurality_voting = PluralityVoting(self)
 
+        self.distribution_settings = distribution_settings
+
         self.spawn_agents(num_agents)
+
+        self.cnp = ContractNetProtocol(self)
 
         self._step_count = 0
 
@@ -66,35 +71,46 @@ class Simulation(mesa.Model):
             agent = DisabledPerson(self)
             self.schedule.add(agent)
 
-    def step(self):
-        """
-        Simulate one timestep of the simulation.
-        """
-        self.schedule.step()
-
-        # time.sleep(0.2)
-
-        self._step_count += 1
-
-    def run(self, max_time_steps: int=100):
+    def run(self, max_time_steps: int=10_000) -> None:
         """
         Run an entire simulation.
 
         Args:
             max_time_steps: The number of timesteps to run the simulation for.
         """
-        # TODO: Pairing CNP
+        self.cnp.run()
 
         self.plurality_voting.run()
 
-        for _ in range(max_time_steps):
+        while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)
 
-            self.step()
+            time.sleep(0.2)
 
-            if self.schedule.is_empty():
-                show_grid(self.grid, cls=True)
-                break
+            self.schedule.step()
+
+            self._step_count += 1
+
+        show_grid(self.grid, cls=True)
 
         print("Simulation completed...")
-        log_sim(self._exit_times, self._step_count)
+        log_sim(self._exit_times, self._step_count, len(self.schedule))
+
+    def _is_finished(self, max_time_steps: int) -> bool:
+        """
+        Check if the simulation is finished.
+        The simulation is finished when all agents have evacuated.
+        """
+        if self._step_count >= max_time_steps:
+            return True
+
+        only_disabled = all(
+            isinstance(agent, DisabledPerson) for agent in self.schedule
+        )
+
+        if only_disabled:
+            return True
+
+        is_empty = self.schedule.is_empty()
+
+        return is_empty
