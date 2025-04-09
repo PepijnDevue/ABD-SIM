@@ -1,4 +1,4 @@
-from src.simulation import Simulation
+from src import Simulation
 
 def main():
     # Example with plurality voting
