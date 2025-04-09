@@ -40,6 +40,8 @@ class Simulation(mesa.Model):
 
         self._step_count = 0
 
+        self._prev_time = time.time()
+
         self._exit_times = []
 
         self.clusters = Clusters(self)
@@ -80,7 +82,7 @@ class Simulation(mesa.Model):
         while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)
 
-            time.sleep(0.2)
+            self._sleep(0.2)
 
             self.schedule.step()
 
@@ -100,7 +102,8 @@ class Simulation(mesa.Model):
             return True
 
         only_disabled = all(
-            isinstance(agent, DisabledPerson) for agent in self.schedule
+            isinstance(agent, DisabledPerson) and agent.speed == 0
+            for agent in self.schedule
         )
 
         if only_disabled:
@@ -109,3 +112,16 @@ class Simulation(mesa.Model):
         is_empty = self.schedule.is_empty()
 
         return is_empty
+    
+    def _sleep(self, seconds: float) -> None:
+        """
+        Sleep for a given number of seconds.
+        Calculate based on time passed since the last step.
+        """
+        cur_time = time.time()
+        delta_time = cur_time - self._prev_time
+
+        if delta_time < seconds:
+            time.sleep(seconds - delta_time)
+
+        self._prev_time = cur_time
