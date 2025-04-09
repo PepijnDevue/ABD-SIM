@@ -1,7 +1,7 @@
 import mesa
 import numpy as np
 
-from .agents import AbledPerson, DisabledPerson
+from .agents import Person, AbledPerson, DisabledPerson
 
 class ContractNetProtocol:
     """
@@ -10,87 +10,107 @@ class ContractNetProtocol:
     The abled agents respond with bids based on distance and morality.
     The best contractor is selected based on the bid score.
     """
-    def __init__(self, model: mesa.Model):
+    def __init__(self):
         """
         Initialize the plurality voting algorithm.
 
         Args:
             model: The mesa model containing the agents and grid.
         """
-        self._model = model
-        self._clusters = model.clusters
-        self._floor_plan = model.floor_plan
-        self._grid = model.grid
-        self._agents = model.schedule._agents
-        self._disabled_agents = {
-            agent.unique_id: agent 
-            for agent in self._agents.values() 
-            if isinstance(agent, DisabledPerson)
-        }
-        self._cfp_search_area = 10
+        self._cfp_radius = 10
 
-    def run(self) -> None:
+        self._pair_id = 0
+
+    def run(self, 
+            disabled_agents: list[DisabledPerson]
+            ) -> dict[str, list[Person]]:
         """Run the contract net protocol."""
-        pair_id = 0
+        pairs = {}
 
-        for disabled_agent in self._disabled_agents.values():
-            # Set the target exit for the disabled agent
-            disabled_agent.target_exit = disabled_agent.vote_exit()
+        for agent in disabled_agents:
+            pair = self.call_out(agent)
 
-            # Get the path to the exit for the disabled agent
-            caller_exit_path = disabled_agent.get_exit_path()
+            pairs.update(pair)
 
-            # Get available contractors
-            contractors = self._call_for_proposal(disabled_agent)
+        return pairs
 
-            if not contractors:
-                continue  # No contractors available, move to the next disabled agent
+    def call_out(self, 
+                 disabled_agent: DisabledPerson
+                 ) -> dict[str, list[Person]]:
+        """
+        Call out for proposals from abled agents.
+        The disabled agent will set its target exit and call for proposals.
+        The abled agents will respond with bids based on distance and morality.
+        The best contractor will be selected based on the bid score.
+        If no contractors are available, the disabled agent will not be paired.
+        """
+        disabled_agent.target_exit = disabled_agent.vote_exit()
 
-            # Add bids to the contractors dictionary
-            self._process_bids(disabled_agent, 
-                               contractors, 
-                               len(caller_exit_path)
-                               )
-            
-            # Sort the contractors by bid score
-            contractors.sort(key=lambda x: x["bid"], reverse=True)
+        # Get the path to the exit for the disabled agent
+        caller_exit_path = disabled_agent.get_exit_path()
 
-            # Get the best contractor
-            best_contractor = contractors[0]['agent']
+        # Get available contractors
+        contractors = self._call_for_proposal(disabled_agent)
 
-            self._pair_agents(pair_id, disabled_agent, best_contractor)
+        if not contractors:
+            return {} # No contractors available, move to the next disabled agent
 
-            pair_id += 1
+        # Add bids to the contractors dictionary
+        bids = self._get_bids(
+            disabled_agent, 
+            contractors, 
+            len(caller_exit_path)
+        )
+        
+        # Find the best contractor based on the bid score
+        best_bid_idx = np.argmin(bids)
+        best_contractor = contractors[best_bid_idx]
 
-    def _pair_agents(self, couple_id, disabled_agent, best_contractor):
+        pair = self._pair_agents(disabled_agent, best_contractor)
+
+        return pair
+
+    def _pair_agents(self, 
+                     disabled_agent: DisabledPerson, 
+                     best_contractor: AbledPerson
+                     ) -> dict[str, list[Person]]:
         """
         Pair the disabled agent with the best contractor.
         Match target exit, cluster and speed of the agents.
         """
         best_contractor.target_exit = disabled_agent.target_exit
 
-        cluster_name = f"pair_{couple_id}"
-        self._clusters.add_to_cluster(cluster_name, disabled_agent)
-        self._clusters.add_to_cluster(cluster_name, best_contractor)
-
         best_contractor.speed = 1
         disabled_agent.speed = 1
 
-    def _process_bids(self,
+        self._pair_id += 1
+
+        cluster_name = f"pair_{self._pair_id}"
+
+        return {cluster_name: [disabled_agent, best_contractor]}
+
+    def _get_bids(self,
                       disabled_agent: DisabledPerson,
-                      contractors: list[dict[str, mesa.Agent]],
-                      distance_to_exit: int) -> None:
+                      contractors: list[AbledPerson],
+                      distance_to_exit: int
+                      ) -> list[float]:
         """
         Handle the bidding process for a disabled agent.
         """
-        for contractor in contractors:
-            abled_agent = contractor["agent"]
-            path_to_caller = abled_agent.get_path_to(disabled_agent.pos)
+        bids = []
 
-            P_score = self._calculate_bid(morality=abled_agent.morality,
-                                          distance_to_caller=len(path_to_caller),
-                                          distance_to_exit=distance_to_exit)
-            contractor["bid"] = P_score
+        for contractor in contractors:
+            path_to_caller = contractor.get_path_to(disabled_agent.pos)
+
+            P_score = self._calculate_bid(
+                morality=contractor.morality,
+                distance_to_caller=len(path_to_caller),
+                distance_to_exit=distance_to_exit
+            )
+
+            bids.append(P_score)
+
+        return bids
 
     def _calculate_bid(self,
                        morality: float, 
@@ -121,21 +141,18 @@ class ContractNetProtocol:
         P_score = (1 - M) * ((Dd / 2) + De)
         return P_score
 
-    def _call_for_proposal(self, disabled_agent: DisabledPerson) -> list[dict[str, mesa.Agent]]:
+    def _call_for_proposal(self, disabled_agent: DisabledPerson) -> list[AbledPerson]:
         """
         Identify contractors willing to bid for assisting the disabled agent.
         """
         contractors = []
 
-        abled_agents_in_range = self._filter_by_search_area(disabled_agent)
+        nearby_abled_agents = self._find_contractors(disabled_agent)
 
-        # Check for every abled agent in the range if they are willing to bid
-        for agent_dict in abled_agents_in_range:
-            agent = agent_dict["agent"]
-
-            # Add the agent to the contractors list if they are willing to bid
-            if self._check_bid_willingness(agent):
-                contractors.append(agent_dict)
+        contractors = [
+            abled_agent for abled_agent in nearby_abled_agents
+            if self._check_bid_willingness(abled_agent)
+        ]
 
         return contractors
 
@@ -153,53 +170,38 @@ class ContractNetProtocol:
 
         return willing_to_bid
     
-    def _filter_by_search_area(self, disabled_agent: DisabledPerson) -> dict[mesa.Agent, int]:
+    def _find_contractors(self, disabled_agent: DisabledPerson) -> dict[mesa.Agent, int]:
         """
         Filter the agents in the absolute area by pathfinding and return a list of dictionaries
         containing the agent's ID and the agent object.
         """
-        # First scan the absolute area of the disabled agent ignoring walls
-        abs_abled_agents_in_range = self._scan_absolute_area(disabled_agent)
+        nearby_agents = disabled_agent.get_neighbors(radius=self._cfp_radius)
 
-        # Filter out agents that are not in the step range of the disabled agent
-        abled_agents_in_range = self._filter_by_pathfinding(disabled_agent, abs_abled_agents_in_range)
-        return abled_agents_in_range
-
-    def _scan_absolute_area(self, disabled_agent: DisabledPerson) -> list[dict[mesa.Agent, int]]:
-        """
-        Scan the absolute area of the disabled agent ignoring walls and return a list of dictionaries
-        containing the agent's ID and the agent object.
-        """
-        agents_in_range = self._grid.get_neighbors(
-            pos=disabled_agent.pos,
-            moore=False,
-            include_center=False,
-            radius=self._cfp_search_area
-        )
         # Filter out agents that are not of type AbledPerson and include their IDs
-        abled_agents_in_range = [
-            {"id": {agent.unique_id}, "agent": agent}
-            for agent in agents_in_range 
+        nearby_abled_agents = [
+            agent for agent in nearby_agents
             if isinstance(agent, AbledPerson)
         ]
-        return abled_agents_in_range
+
+        # Filter out agents that are not in the step range of the disabled agent
+        nearby_abled_agents = self._filter_by_pathfinding(disabled_agent, nearby_abled_agents)
+        
+        return nearby_abled_agents
 
     def _filter_by_pathfinding(self,
                                disabled_agent: DisabledPerson,
-                               abs_abled_agents_in_range: list[dict[mesa.Agent, int]]) -> list[dict[mesa.Agent, int]]:
+                               nearby_abled_agents: list[AbledPerson]) -> list[AbledPerson]:
         """
         Filter the agents in the absolute area by pathfinding and return a list of dictionaries
         containing the agent's ID and the agent object.
         """
-        abled_agents_in_range = []
+        reachable_abled_agents = []
 
-        for agent_dict in abs_abled_agents_in_range:
-            agent = agent_dict["agent"]
-
+        for agent in nearby_abled_agents:
             # Check if the agent is within the step range of the disabled agent using pathfinding
             shortest_path = disabled_agent.get_path_to(agent.pos)
 
-            if len(shortest_path) <= self._cfp_search_area:
-                abled_agents_in_range.append(agent_dict)
+            if len(shortest_path) <= self._cfp_radius:
+                reachable_abled_agents.append(agent)
 
-        return abled_agents_in_range
+        return reachable_abled_agents

@@ -2,8 +2,6 @@ import mesa
 
 from .agents import AbledPerson, DisabledPerson
 
-from .plurality_voting import PluralityVoting
-from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .clustering import Clusters
 from .floor_plan import floor_plans
@@ -44,11 +42,7 @@ class Simulation(mesa.Model):
 
         self._exit_times = []
 
-        self.clusters = Clusters()
-
-        self.cnp = ContractNetProtocol(self)
-
-        self.plurality_voting = PluralityVoting(self)
+        self.clusters = Clusters(self)
 
         show_grid(self.grid)
 
@@ -81,9 +75,7 @@ class Simulation(mesa.Model):
         Args:
             max_time_steps: The number of timesteps to run the simulation for.
         """
-        self.cnp.run()
-
-        self.plurality_voting.run()
+        self.clusters.run()
 
         while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)

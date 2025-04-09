@@ -55,7 +55,33 @@ class Person(mesa.Agent):
         # If the other agent is in another cluster and has a different target exit, merge the clusters
         other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
         if other_agent.target_exit != self.target_exit:
-            self._model.plurality_voting.revote(self.cluster, other_agent.cluster)
+            self._model.clusters.merge(self.cluster, other_agent.cluster)
+
+    def get_neighbors(self, radius: int) -> 'list[Person]':
+        """
+        Get all Person agents in the neighborhood of the agent.
+        The neighborhood is defined by the radius parameter, using Von Neumann distance.
+
+        Args:
+            radius: The radius to search for neighbors.
+
+        Returns:
+            list[tuple[int, int]]: The neighbors of the agent.
+        """
+        neighbors = self._model.grid.get_neighbors(
+            pos=self.pos,
+            moore=False,
+            include_center=False,
+            radius=radius
+        )
+
+        # Filter out agents that are not of type Person
+        person_neighbors = [
+            agent for agent in neighbors
+            if isinstance(agent, Person)
+        ]
+
+        return person_neighbors
 
     def get_exit_path(self) -> list[tuple[int, int]]:
         """
