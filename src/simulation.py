@@ -102,7 +102,7 @@ class Simulation(mesa.Model):
             return True
 
         only_disabled = all(
-            agent.speed == 0
+            isinstance(agent, DisabledPerson) and agent.speed == 0
             for agent in self.schedule
         )
 

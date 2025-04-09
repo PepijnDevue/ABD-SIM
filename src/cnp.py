@@ -13,9 +13,6 @@ class ContractNetProtocol:
     def __init__(self):
         """
         Initialize the plurality voting algorithm.
-
-        Args:
-            model: The mesa model containing the agents and grid.
         """
         self._cfp_radius = 10
 
