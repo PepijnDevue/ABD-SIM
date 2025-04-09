@@ -161,9 +161,6 @@ class ContractNetProtocol:
         Assess if the agent is willing to bid based on their morality
         and if they are not already helping.
         """
-        if agent.cluster:
-            return False
-
         bid_chance = np.random.uniform(0, 1)
 
         willing_to_bid = bid_chance <= agent.morality

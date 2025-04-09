@@ -39,6 +39,17 @@ class Clusters:
 
         self._voting.run(self._clusters.values())
 
+    def merge(self, cluster1: str, cluster2: str) -> None:
+        """
+        Merge two clusters into one, returning the new cluster.
+        Let the two clusters revote for a new target exit.
+        """
+        new_cluster = self._merge(cluster1, cluster2)
+
+        agents = self._clusters[new_cluster]
+
+        self._voting.vote(agents)
+
     def _create_cnp_pairs(self) -> None:
         """
         Create pairs of disabled agents and helping abled agents.
@@ -67,7 +78,7 @@ class Clusters:
             if cluster == '.':
                 continue
 
-            self.add_to_cluster(cluster, agent)
+            self._add_to_cluster(cluster, agent)
 
     def _create_corridor_clusters(self) -> None:
         """
@@ -99,7 +110,7 @@ class Clusters:
         search_radius = 4
         max_iter = 10
 
-        self.add_to_cluster(cluster_name, agent)
+        self._add_to_cluster(cluster_name, agent)
 
         for _ in range(max_iter):
             centroid = self._calc_centroid(positions)
@@ -121,7 +132,7 @@ class Clusters:
                 # Update the cluster positions
                 positions.append(person.pos)
 
-                self.add_to_cluster(cluster_name, person)
+                self._add_to_cluster(cluster_name, person)
 
     def _filter_neighbours(self, search_area: list) -> list:
         """
@@ -164,7 +175,7 @@ class Clusters:
         
         return centroid
     
-    def add_to_cluster(self,
+    def _add_to_cluster(self,
                        cluster: str,
                        agent: Person
                        ) -> None:
@@ -172,27 +183,16 @@ class Clusters:
         Add an agent to a cluster.
         If the cluster does not exist, create it.
         """
-        self.add_cluster(cluster)
+        self._add_cluster(cluster)
         self._clusters[cluster].append(agent)
 
         agent.cluster = cluster
 
-    def add_cluster(self, cluster: str) -> None:
+    def _add_cluster(self, cluster: str) -> None:
         """
         Add a new cluster to the clusters dictionary.
         """
         self._clusters.setdefault(cluster, [])
-
-    def merge(self, cluster1: str, cluster2: str) -> None:
-        """
-        Merge two clusters into one, returning the new cluster.
-        Let the two clusters revote for a new target exit.
-        """
-        new_cluster = self._merge(cluster1, cluster2)
-
-        agents = self._clusters[new_cluster]
-
-        self._voting.vote(agents)
 
     def _merge(self, cluster1: str, cluster2: str) -> str:
         """
@@ -201,17 +201,19 @@ class Clusters:
         new_cluster = f"({cluster1})_({cluster2})"
 
         for agent in self._clusters[cluster1] + self._clusters[cluster2]:
-            self.add_to_cluster(new_cluster, agent)
+            self._add_to_cluster(new_cluster, agent)
 
-        self.remove(cluster1)
-        self.remove(cluster2)
+        self._remove(cluster1)
+        self._remove(cluster2)
 
         return new_cluster
 
-    def remove(self, cluster: str) -> None:
+    def _remove(self, cluster: str) -> None:
         """
         Remove a cluster from the clusters dictionary.
         """
+        print(f"Clusters: {self._clusters.keys()}")
+        print(f"Removing cluster {cluster}")
         del self._clusters[cluster]
 
     

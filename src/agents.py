@@ -37,25 +37,30 @@ class Person(mesa.Agent):
         if self.speed == 0 or not path_to_exit:
             return
 
-        # Find the agent's new position based on its speed
-        target_idx = min(self.speed, len(path_to_exit)) - 1
-        target_pos = path_to_exit[target_idx]
+        # Calculate step_size based on the speed of the agent
+        num_steps = min(self.speed, len(path_to_exit))
 
-        # Remove the agent if it is at the exit
-        if self._model.grid._cell_is_exit(target_pos):
-            self._remove()
-            self.model.log_agent_evacuate_time()
-            return
+        # Take steps one by one to not jump over other agents
+        for _ in range(num_steps):
+
+            target_pos = path_to_exit.pop(0)
+
+            # Remove the agent if it is at the exit
+            if self._model.grid._cell_is_exit(target_pos):
+                self._remove()
+                self._model.log_agent_evacuate_time()
+                return
         
-        # If the new position is empty, move the agent to the new position
-        if self._model.grid.is_cell_empty(target_pos):
-            self._model.grid.move_agent(self, target_pos)
-            return
+            # If the new position is empty, move the agent to the new position
+            if self._model.grid.is_cell_empty(target_pos):
+                self._model.grid.move_agent(self, target_pos)
+                continue
         
-        # If the other agent is in another cluster and has a different target exit, merge the clusters
-        other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
-        if other_agent.target_exit != self.target_exit:
-            self._model.clusters.merge(self.cluster, other_agent.cluster)
+            # If blocked by another agent, merge clusters if they have different target exits
+            other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
+            if other_agent.target_exit != self.target_exit:
+                self._model.clusters.merge(self.cluster, other_agent.cluster)
+            return
 
     def get_neighbors(self, radius: int) -> 'list[Person]':
         """
@@ -139,6 +144,7 @@ class Person(mesa.Agent):
         self._model.grid.remove_agent(self)
         self._model.schedule.remove(self)
 
+
 class AbledPerson(Person):
     """
     Class that represents an able-bodied person in the grid derived from the Person class.
@@ -154,6 +160,7 @@ class AbledPerson(Person):
         self.morality = np.round(clipped_morality, 2)
 
         self.speed = 2
+
 
 class DisabledPerson(Person):
     """
