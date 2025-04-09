@@ -82,7 +82,7 @@ class Simulation(mesa.Model):
         while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)
 
-            self._sleep(0.2)
+            self._sleep(0.15)
 
             self.schedule.step()
 
@@ -102,7 +102,7 @@ class Simulation(mesa.Model):
             return True
 
         only_disabled = all(
-            isinstance(agent, DisabledPerson) and agent.speed == 0
+            agent.speed == 0
             for agent in self.schedule
         )
 

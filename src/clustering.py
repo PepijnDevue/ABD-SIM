@@ -212,8 +212,6 @@ class Clusters:
         """
         Remove a cluster from the clusters dictionary.
         """
-        print(f"Clusters: {self._clusters.keys()}")
-        print(f"Removing cluster {cluster}")
         del self._clusters[cluster]
 
     
