@@ -139,10 +139,14 @@ class ContractNetProtocol:
 
         return contractors
 
-    def _check_bid_willingness(self, agent):
+    def _check_bid_willingness(self, agent: AbledPerson) -> bool:
         """
-        Assess if the agent is willing to bid based on their morality.
+        Assess if the agent is willing to bid based on their morality
+        and if they are not already helping.
         """
+        if agent.cluster:
+            return False
+
         bid_chance = np.random.uniform(0, 1)
 
         willing_to_bid = bid_chance <= agent.morality

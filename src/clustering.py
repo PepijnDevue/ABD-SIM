@@ -36,7 +36,7 @@ class Clusters:
         """
         Add a new cluster to the clusters dictionary.
         """
-        self._clusters[cluster] = []
+        self._clusters.setdefault(cluster, [])
 
     def merge_clusters(self, cluster1: str, cluster2: str) -> list[Person]:
         """

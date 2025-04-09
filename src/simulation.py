@@ -50,10 +50,6 @@ class Simulation(mesa.Model):
 
         self.plurality_voting = PluralityVoting(self)
 
-        for agent in self.schedule:
-            if not agent.target_exit:
-                print("No target exit for agent:", agent.unique_id)
-
         show_grid(self.grid)
 
     def log_agent_evacuate_time(self):
