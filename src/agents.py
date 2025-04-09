@@ -21,7 +21,7 @@ class Person(mesa.Agent):
     def __init__(self, model: mesa.Model):
         super().__init__(model)
         self._model = model
-        self.speed = 1
+        self.speed = None
         self.cluster = None
         self.target_exit = None
         # Spawn the agent at a random empty position
@@ -169,3 +169,15 @@ class DisabledPerson(Person):
     def __init__(self, model: mesa.Model):
         super().__init__(model)
         self.speed = 0
+
+    def step(self) -> None:
+        """
+        Step function for the disabled agent.
+        The agent does not move, but waits for a helping agent.
+        """
+        if self.speed == 0:
+            print("Disabled agent waiting for help")
+            self.model.clusters.call_out_cnp(self)
+            return
+        
+        super().step()

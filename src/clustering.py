@@ -1,7 +1,7 @@
 import numpy as np
 import mesa
 
-from .agents import Person
+from .agents import Person, AbledPerson, DisabledPerson
 from .cnp import ContractNetProtocol
 from .plurality_voting import PluralityVoting
 
@@ -50,6 +50,14 @@ class Clusters:
 
         self._voting.vote(agents)
 
+    def call_out_cnp(self, disabled_agent: DisabledPerson) -> None:
+        """
+        Call out for proposals from abled agents.
+        """
+        new_pair = self._cnp.call_out(disabled_agent)
+
+        self._update(new_pair)
+
     def _create_cnp_pairs(self) -> None:
         """
         Create pairs of disabled agents and helping abled agents.
@@ -59,7 +67,15 @@ class Clusters:
 
         new_pairs = self._cnp.run(disabled_agents)
 
-        self._clusters.update(new_pairs)
+        self._update(new_pairs)
+
+    def _update(self, new_clusters: dict[str, list[Person]]) -> None:
+        """
+        Update the clusters with new clusters.
+        """
+        for cluster, agents in new_clusters.items():
+            for agent in agents:
+                self._add_to_cluster(cluster, agent)
 
     def _create_room_clusters(self) -> None:
         """
@@ -67,8 +83,8 @@ class Clusters:
         Each cluster is a group of students in the same classroom.
         """
         for agent in self._schedule:
-            # Skip if the agent is already in a cluster
-            if agent.cluster:
+            # Skip if the agent is already in a cluster or disabled
+            if agent.cluster or isinstance(agent, DisabledPerson):
                 continue
 
             x, y = agent.pos
@@ -88,7 +104,7 @@ class Clusters:
         cur_cluster_id = 0
 
         for agent in self._schedule:
-            if agent.cluster:
+            if agent.cluster or isinstance(agent, DisabledPerson):
                 continue
 
             cur_cluster_id += 1
@@ -147,7 +163,7 @@ class Clusters:
         filtered_neighbours = []
 
         for obj in search_area:
-            if not isinstance(obj, Person):
+            if not isinstance(obj, AbledPerson):
                 continue
 
             if obj.cluster:
@@ -183,6 +199,10 @@ class Clusters:
         Add an agent to a cluster.
         If the cluster does not exist, create it.
         """
+        # Remove the agent from its current cluster
+        if agent.cluster:
+            self._clusters[agent.cluster].remove(agent)
+
         self._add_cluster(cluster)
         self._clusters[cluster].append(agent)
 
