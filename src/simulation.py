@@ -2,8 +2,6 @@ import mesa
 
 from .agents import AbledPerson, DisabledPerson
 
-from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting, CumulativeVoting
-from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .clustering import Clusters
 from .floor_plan import floor_plans
@@ -34,16 +32,13 @@ class Simulation(mesa.Model):
             num_agents: The number of agents to spawn
         """
         super().__init__()
-        self.schedule = RandomActivation(self)
+        self.schedule = RandomActivation()
 
         self.floor_plan = floor_plans[floor_plan]
 
         self.grid = Grid(self, self.floor_plan)
 
         self.pathfinder = Pathfinder(self.grid)
-
-        # Initialize voting method based on parameter
-        self.voting_method = self._setup_voting_method(voting_method)
 
         self.distribution_settings = distribution_settings
 
@@ -55,29 +50,11 @@ class Simulation(mesa.Model):
 
         self._exit_times = []
 
-        self.clusters = Clusters(self)
+        self.clusters = Clusters(self, voting_method)
+        
+        self._voting_method = voting_method
 
         show_grid(self.grid)
-
-    def _setup_voting_method(self, method: str) -> VotingMethod:
-        """
-        Setup the voting method based on the input parameter.
-        
-        Args:
-            method: The voting method to use ("plurality" or "approval")
-            
-        Returns:
-            VotingMethod: The initialized voting method
-        """
-        method = method.lower()
-        if method == "approval":
-            return ApprovalVoting(self)
-        elif method == "plurality":
-            return PluralityVoting(self)
-        elif method == "cumulative":
-            return CumulativeVoting(self)
-        else:
-            raise ValueError(f"Unknown voting method: {method}. Use 'plurality', 'approval', or 'cumulative'")
 
     def log_agent_evacuate_time(self):
         """
@@ -126,7 +103,7 @@ class Simulation(mesa.Model):
             self._exit_times, 
             self._step_count, 
             len(self.schedule), 
-            voting_method=self.voting_method.__class__.__name__
+            voting_method=self._voting_method
         )
 
     def _is_finished(self, max_time_steps: int) -> bool:
