@@ -1,6 +1,4 @@
 from abc import ABC, abstractmethod
-import mesa
-import numpy as np
 from .agents import Person
 
 class VotingMethod(ABC):
