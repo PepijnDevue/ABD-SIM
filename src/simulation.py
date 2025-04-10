@@ -37,7 +37,7 @@ class Simulation(mesa.Model):
         self.floor_plan = floor_plans[floor_plan]
 
         self.grid = Grid(
-            widht=len(self.floor_plan[0]),
+            width=len(self.floor_plan[0]),
             height=len(self.floor_plan),
         )
 

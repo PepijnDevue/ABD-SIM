@@ -147,7 +147,7 @@ class Person(mesa.Agent):
 
     def get_approved_exits(self) -> list[tuple[int, int]]:
         """
-        Used by - ApprovalVoting.
+        Used by ApprovalVoting.
         Returns a list of exits that the agent approves of.
         An exit is approved if it's within an acceptable distance threshold.
         """
@@ -170,7 +170,7 @@ class Person(mesa.Agent):
 
     def get_cumulative_votes(self) -> dict[tuple[int, int], float]:
         """
-        Used by - CumulativeVoting.
+        Used by CumulativeVoting.
         Returns a dictionary of exits and their assigned weights.
         Each agent has 10 points to distribute among exits.
         Points are distributed based on inverse distance to exits.
