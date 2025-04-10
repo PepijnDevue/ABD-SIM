@@ -1,5 +1,7 @@
 import mesa
 
+from .agents import DisabledPerson
+
 class RandomActivation:
     """
     Activation class that activates agents in random order.
@@ -38,6 +40,15 @@ class RandomActivation:
 
         for agent in agents:
             agent.step()
+
+    def get_disabled_agents(self) -> list[DisabledPerson]:
+        """
+        Get all disabled agents from the activation list.
+        """
+        return [
+            agent for agent in self._agents.values() 
+            if isinstance(agent, DisabledPerson)
+        ]
 
     def remove(self, agent: mesa.Agent) -> None:
         """
