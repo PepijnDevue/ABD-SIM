@@ -5,6 +5,7 @@ from .agents import AbledPerson, DisabledPerson
 from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting, CumulativeVoting
 from .cnp import ContractNetProtocol
 from .activation import RandomActivation
+from .clustering import Clusters
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
 from .grid import Grid
@@ -48,11 +49,13 @@ class Simulation(mesa.Model):
 
         self.spawn_agents(num_agents)
 
-        self.cnp = ContractNetProtocol(self)
-
         self._step_count = 0
 
+        self._prev_time = time.time()
+
         self._exit_times = []
+
+        self.clusters = Clusters(self)
 
         show_grid(self.grid)
 
@@ -105,14 +108,12 @@ class Simulation(mesa.Model):
         Args:
             max_time_steps: The number of timesteps to run the simulation for.
         """
-        self.cnp.run()
-
-        self.voting_method.run()
+        self.clusters.run()
 
         while not self._is_finished(max_time_steps):
             show_grid(self.grid, cls=True)
 
-            time.sleep(0.2)
+            self._sleep(0.15)
 
             self.schedule.step()
 
@@ -137,7 +138,8 @@ class Simulation(mesa.Model):
             return True
 
         only_disabled = all(
-            isinstance(agent, DisabledPerson) for agent in self.schedule
+            isinstance(agent, DisabledPerson) and agent.speed == 0
+            for agent in self.schedule
         )
 
         if only_disabled:
@@ -146,3 +148,16 @@ class Simulation(mesa.Model):
         is_empty = self.schedule.is_empty()
 
         return is_empty
+    
+    def _sleep(self, seconds: float) -> None:
+        """
+        Sleep for a given number of seconds.
+        Calculate based on time passed since the last step.
+        """
+        cur_time = time.time()
+        delta_time = cur_time - self._prev_time
+
+        if delta_time < seconds:
+            time.sleep(seconds - delta_time)
+
+        self._prev_time = cur_time

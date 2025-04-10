@@ -181,7 +181,7 @@ class VotingMethod(ABC):
 class PluralityVoting(VotingMethod):
     """Implementation of plurality voting method."""
 
-    def _vote_cluster(self, cluster: str, agents: list[Person]) -> None:
+    def vote(self, agents: list[Person]) -> None:
         """
         Run the plurality voting for a cluster of agents.
 
