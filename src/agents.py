@@ -124,6 +124,36 @@ class Person(mesa.Agent):
         
         return approved_exits
 
+    def get_cumulative_votes(self) -> dict[tuple[int, int], float]:
+        """
+        Returns a dictionary of exits and their assigned weights.
+        Each agent has 10 points to distribute among exits.
+        Points are distributed based on inverse distance to exits.
+        
+        Returns:
+            dict: Dictionary mapping exit positions to vote weights
+        """
+        exits, distances = self.model.pathfinder.get_exits(self.pos)
+        
+        # If there are no exits (and thus no distances), 
+        # return empty dictionary - meaning the agent can't vote
+        if not distances:
+            return {}
+            
+        total_points = 10  # Each agent gets 10 points to distribute
+        weights = {}
+        
+        # Convert distances to inverse weights (closer exits get more points)
+        inverse_distances = [1/d for d in distances]
+        total_inverse = sum(inverse_distances)
+        
+        # Distribute points proportionally based on inverse distance
+        for exit_pos, inv_dist in zip(exits, inverse_distances):
+            weight = (inv_dist / total_inverse) * total_points
+            weights[exit_pos] = weight
+            
+        return weights
+
 class AbledPerson(Person):
     """
     Class that represents an able-bodied person in the grid derived from the Person class.

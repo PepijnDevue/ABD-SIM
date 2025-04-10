@@ -24,6 +24,18 @@ def main():
         voting_method="approval"
     )
     sim2.run()
+    
+    # Example with cumulative voting
+    sim3 = Simulation(
+        floor_plan="Heidelberglaan_15",
+        num_agents=250,
+        distribution_settings={
+            "mean": 0.5,
+            "std": 0.2,
+        },
+        voting_method="cumulative"
+    )
+    sim3.run()
 
 if __name__ == "__main__":
     main()

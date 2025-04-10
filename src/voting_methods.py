@@ -225,3 +225,34 @@ class ApprovalVoting(VotingMethod):
 
         most_approved_exit = max(approval_scores, key=approval_scores.get)
         self._assign_target_exit(agents, most_approved_exit)
+
+class CumulativeVoting(VotingMethod):
+    """Implementation of cumulative voting method."""
+
+    def _vote_cluster(self, cluster: str, agents: list[Person]) -> None:
+        """
+        Run the cumulative voting for a cluster of agents.
+        Each agent gets multiple votes (points) they can distribute among exits.
+
+        Args:
+            cluster: The name of the cluster.
+            agents: The agents in the cluster.
+        """
+        cumulative_scores = {}
+        
+        for agent in agents:
+            # Get the weighted votes from the agent
+            exit_weights = agent.get_cumulative_votes()
+            
+            # Add the weights to the cumulative scores
+            for exit_pos, weight in exit_weights.items():
+                if exit_pos in cumulative_scores:
+                    cumulative_scores[exit_pos] += weight
+                else:
+                    cumulative_scores[exit_pos] = weight
+
+        if not cumulative_scores:
+            return
+
+        most_voted_exit = max(cumulative_scores, key=cumulative_scores.get)
+        self._assign_target_exit(agents, most_voted_exit)

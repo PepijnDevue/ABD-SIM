@@ -2,7 +2,7 @@ import mesa
 
 from .agents import AbledPerson, DisabledPerson
 
-from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting
+from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting, CumulativeVoting
 from .cnp import ContractNetProtocol
 from .activation import RandomActivation
 from .floor_plan import floor_plans
@@ -71,8 +71,10 @@ class Simulation(mesa.Model):
             return ApprovalVoting(self)
         elif method == "plurality":
             return PluralityVoting(self)
+        elif method == "cumulative":
+            return CumulativeVoting(self)
         else:
-            raise ValueError(f"Unknown voting method: {method}. Use 'plurality' or 'approval'")
+            raise ValueError(f"Unknown voting method: {method}. Use 'plurality', 'approval', or 'cumulative'")
 
     def log_agent_evacuate_time(self):
         """
