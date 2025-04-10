@@ -28,7 +28,7 @@ class Simulation(mesa.Model):
         Args:
             floor_plan: The used floorplan_name
             distribution_settings: Settings for agent distribution
-            voting_method: The voting method to use ("plurality" or "approval")
+            voting_method: The voting method to use ("plurality", "approval", or "cumulative")
             num_agents: The number of agents to spawn
         """
         super().__init__()
