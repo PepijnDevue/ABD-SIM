@@ -1,13 +1,13 @@
 import mesa
 
 from .agents import DisabledPerson
+import numpy as np
 
 class RandomActivation:
     """
     Activation class that activates agents in random order.
     """
-    def __init__(self, model: mesa.Model):
-        self._model = model
+    def __init__(self):
         self._agents = {}
 
     def __iter__(self):
@@ -36,7 +36,7 @@ class RandomActivation:
         Randomly activate agents.
         """
         agents = list(self._agents.values())
-        self._model.random.shuffle(agents)
+        np.random.shuffle(agents)
 
         for agent in agents:
             agent.step()

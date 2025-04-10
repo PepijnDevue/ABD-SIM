@@ -24,6 +24,7 @@ class Person(mesa.Agent):
         self.speed = None
         self.cluster = None
         self.target_exit = None
+
         # Spawn the agent at a random empty position
         self._model.grid.move_to_empty(self)
 
@@ -128,8 +129,8 @@ class Person(mesa.Agent):
         alpha = 3.14159
         weights = [weight ** alpha for weight in weights]
 
+        # Normalize the weights to sum to 1
         sum_of_weights = sum(weights)
-
         probabilities = [weight/sum_of_weights for weight in weights]
 
         chosen_exit_idx = np.random.choice(len(sorted_exits), p=probabilities)
@@ -144,6 +145,61 @@ class Person(mesa.Agent):
         self._model.grid.remove_agent(self)
         self._model.schedule.remove(self)
 
+    def get_approved_exits(self) -> list[tuple[int, int]]:
+        """
+        Used by ApprovalVoting.
+        Returns a list of exits that the agent approves of.
+        An exit is approved if it's within an acceptable distance threshold.
+        """
+        exits, distances = self.model.pathfinder.get_exits(self.pos)
+        
+        # Safety check: if no exits/distances found, return empty list
+        if not distances:
+            return []
+        
+        approved_exits = []
+        
+        # Approve exits within 150% of the closest exit's distance
+        threshold = distances[0] * 1.5
+        
+        for exit_pos, distance in zip(exits, distances):
+            if distance <= threshold:
+                approved_exits.append(exit_pos)
+        
+        return approved_exits
+
+    def get_cumulative_votes(self) -> dict[tuple[int, int], float]:
+        """
+        Used by CumulativeVoting.
+        Returns a dictionary of exits and their assigned weights.
+        Each agent has 10 points to distribute among exits.
+        Points are distributed based on inverse distance to exits.
+        
+        Returns:
+            dict: Dictionary mapping exit positions to vote weights
+        """
+        exits, distances = self.model.pathfinder.get_exits(self.pos)
+        
+        # Safety check: if no exits/distances found, return empty dict
+        if not distances:
+            return {}
+        
+        # Each agent gets 10 points to distribute
+        total_points = 10
+        votes = {}
+        
+        # Convert distances to inverse weights (closer exits get more points)
+        weights = [1 / distance for distance in distances]
+        
+        # Normalize weights to sum to 1
+        total_weight = sum(weights)
+        weights = [weight / total_weight for weight in weights]
+        
+        # Distribute points proportionally based on inverse distance
+        for exit_pos, weight in zip(exits, weights):
+            votes[exit_pos] = weight * total_points
+            
+        return votes
 
 class AbledPerson(Person):
     """
@@ -160,7 +216,6 @@ class AbledPerson(Person):
         self.morality = np.round(clipped_morality, 2)
 
         self.speed = 2
-
 
 class DisabledPerson(Person):
     """

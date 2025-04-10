@@ -3,20 +3,20 @@ import mesa
 
 from .agents import Person, AbledPerson, DisabledPerson
 from .cnp import ContractNetProtocol
-from .plurality_voting import PluralityVoting
+from .voting_methods import VotingMethod, PluralityVoting, ApprovalVoting, CumulativeVoting
 
 class Clusters:
     """
     Keep track of clusters, groups and pairs of agents.
     """
-    def __init__(self, model: mesa.Model):
+    def __init__(self, model: mesa.Model, voting_method: str = "plurality"):
         self._clusters = {}
         self._schedule = model.schedule
         self._floor_plan = model.floor_plan
         self._grid = model.grid
 
         self._cnp = ContractNetProtocol()
-        self._voting = PluralityVoting()
+        self._voting = self._setup_voting_method(voting_method)
 
     def __iter__(self):
         return iter(self._clusters.values())
@@ -57,6 +57,26 @@ class Clusters:
         new_pair = self._cnp.call_out(disabled_agent)
 
         self._update(new_pair)
+
+    def _setup_voting_method(self, method: str) -> VotingMethod:
+        """
+        Setup the voting method based on the input parameter.
+        
+        Args:
+            method: The voting method to use ("plurality" or "approval")
+            
+        Returns:
+            VotingMethod: The initialized voting method
+        """
+        match method.lower():
+            case "approval":
+                return ApprovalVoting()
+            case "plurality":
+                return PluralityVoting()
+            case "cumulative":
+                return CumulativeVoting()
+            case _:
+                raise ValueError(f"Unknown voting method: {method}.")
 
     def _create_cnp_pairs(self) -> None:
         """

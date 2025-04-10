@@ -1,6 +1,6 @@
 import mesa
 
-from .agents import AbledPerson, DisabledPerson
+from .agents import AbledPerson, DisabledPerson, Wall, Exit
 
 from .activation import RandomActivation
 from .clustering import Clusters
@@ -17,26 +17,37 @@ class Simulation(mesa.Model):
     """
     Simulation class for the evacuating a building.
     """
-    def __init__(self, floor_plan: str, distribution_settings: dict[str, float], num_agents: int=5):
+    def __init__(self, 
+                 floor_plan: str, 
+                 distribution_settings: dict[str, float], 
+                 voting_method: str = "plurality",
+                 num_agents: int = 5):
         """
         Setup the simulation with a grid, agents and schedule.
 
         Args:
             floor_plan: The used floorplan_name
+            distribution_settings: Settings for agent distribution
+            voting_method: The voting method to use ("plurality", "approval", or "cumulative")
             num_agents: The number of agents to spawn
         """
         super().__init__()
-        self.schedule = RandomActivation(self)
+        self.schedule = RandomActivation()
 
         self.floor_plan = floor_plans[floor_plan]
 
-        self.grid = Grid(self, self.floor_plan)
+        self.grid = Grid(
+            width=len(self.floor_plan[0]),
+            height=len(self.floor_plan),
+        )
+
+        self._initialize_grid()
 
         self.pathfinder = Pathfinder(self.grid)
 
         self.distribution_settings = distribution_settings
 
-        self.spawn_agents(num_agents)
+        self._spawn_agents(num_agents)
 
         self._step_count = 0
 
@@ -44,7 +55,9 @@ class Simulation(mesa.Model):
 
         self._exit_times = []
 
-        self.clusters = Clusters(self)
+        self.clusters = Clusters(self, voting_method)
+
+        self._voting_method = voting_method
 
         show_grid(self.grid)
 
@@ -56,7 +69,7 @@ class Simulation(mesa.Model):
             self._step_count
         )
 
-    def spawn_agents(self, num_agents: int=1, abled_to_disabled_ratio=0.95) -> None:
+    def _spawn_agents(self, num_agents: int=1, abled_to_disabled_ratio=0.95) -> None:
         """
         Spawn agents scattered around the grid.
         """
@@ -91,7 +104,23 @@ class Simulation(mesa.Model):
         show_grid(self.grid, cls=True)
 
         print("Simulation completed...")
-        log_sim(self._exit_times, self._step_count, len(self.schedule))
+        log_sim(
+            self._exit_times, 
+            self._step_count, 
+            len(self.schedule), 
+            voting_method=self._voting_method
+        )
+
+    def _initialize_grid(self) -> None:
+        """
+        Fill the grid with walls and exits based on the floor plan.
+        """
+        for y, row in enumerate(self.floor_plan):
+            for x, cell in enumerate(row):
+                if cell == 'W':
+                    self.grid.place_agent(Wall(self), (x, y))
+                elif cell == 'E':
+                    self.grid.place_agent(Exit(self), (x, y))
 
     def _is_finished(self, max_time_steps: int) -> bool:
         """
