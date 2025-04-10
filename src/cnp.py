@@ -12,7 +12,7 @@ class ContractNetProtocol:
     """
     def __init__(self):
         """
-        Initialize the plurality voting algorithm.
+        Initialize the ContractNetProtocol class.
         """
         self._cfp_radius = 10
 
