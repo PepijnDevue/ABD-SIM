@@ -1,30 +1,20 @@
 import mesa
 
-from .agents import Wall, Exit
+from .agents import Exit
 
 class Grid(mesa.space.SingleGrid):
     """
     Class that represents the grid of the simulation.
     The grid contains walls and exits.
     """
-    def __init__(self, model: mesa.model, floor_plan: list[str]):
+    def __init__(self, width: int, height: int):
         """
         Initialize the grid with a given floor plan.
         
         Arguments:
             floor_plan: The floor plan of the simulation.
         """
-        width = len(floor_plan[0])
-        height = len(floor_plan)
-
         super().__init__(width, height, torus=False)
-
-        for y in range(height):
-            for x in range(width):
-                if floor_plan[y][x] == 'W':
-                    super().place_agent(Wall(model), (x, y))
-                elif floor_plan[y][x] == 'E':
-                    super().place_agent(Exit(model), (x, y))
     
     def _cell_is_exit(self, position: tuple) -> bool:
         """
