@@ -64,7 +64,7 @@ class Person(mesa.Agent):
         
             # If blocked by another agent, merge clusters if they have different target exits
             other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
-            if other_agent.target_exit != self.target_exit:
+            if other_agent.target_exit != self.target_exit and self.cluster != other_agent.cluster and not self.cluster and not other_agent.cluster:
                 self._model.clusters.merge(self.cluster, other_agent.cluster)
             return
 

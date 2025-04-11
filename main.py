@@ -27,7 +27,7 @@ def main():
             morality_std=comb["morality_std"]
         )
 
-        sim.run(num_batches=10)
+        sim.run(num_batches=1)
 
 if __name__ == "__main__":
     main()
