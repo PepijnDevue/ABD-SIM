@@ -10,11 +10,14 @@ class ContractNetProtocol:
     The abled agents respond with bids based on distance and morality.
     The best contractor is selected based on the bid score.
     """
-    def __init__(self):
+    def __init__(self, 
+                 call_radius: int=10, 
+                 **kwargs
+                 ) -> None:
         """
         Initialize the ContractNetProtocol class.
         """
-        self._cfp_radius = 10
+        self._call_radius = call_radius
 
         self._pair_id = 0
 
@@ -169,7 +172,7 @@ class ContractNetProtocol:
         Filter the agents in the absolute area by pathfinding and return a list of dictionaries
         containing the agent's ID and the agent object.
         """
-        nearby_agents = disabled_agent.get_neighbors(radius=self._cfp_radius)
+        nearby_agents = disabled_agent.get_neighbors(radius=self._call_radius)
 
         # Filter out agents that are not of type AbledPerson and include their IDs
         nearby_abled_agents = [
@@ -195,7 +198,7 @@ class ContractNetProtocol:
             # Check if the agent is within the step range of the disabled agent using pathfinding
             shortest_path = disabled_agent.get_path_to(agent.pos)
 
-            if len(shortest_path) <= self._cfp_radius:
+            if len(shortest_path) <= self._call_radius:
                 reachable_abled_agents.append(agent)
 
         return reachable_abled_agents

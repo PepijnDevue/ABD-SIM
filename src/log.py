@@ -1,58 +1,66 @@
 import os
 import json
 
-def log_sim(evac_times: list[int],
-            total_evac_time: int,
-            num_agents_left: int,
-            voting_method: str
-            ) -> None:
+class Logger:
     """
-    Log the simulation data, save as log_n.json
-
-    Args:
-        exit_times: The individual evac times of the agents
-        last_step_cnt: The total evac time in steps. The first timestep where the building is empty.
+    A class to handle logging of simulation data.
     """
-    log_num = read_increment_log_count()
+    def __init__(self, settings: dict|None=None) -> None:
+        """
+        Initialize the Logger with settings.
+        """
+        self._log = {}
 
-    data = {
-        "voting_method": voting_method,
-        "exit_times": evac_times,
-        "avg_evacuation_time": sum(evac_times) / len(evac_times),
-        "total_evacuation_time": total_evac_time,
-        "num_agents_left": num_agents_left
+        self._log_num = self._read_increment_log_count()
+        self._log["settings"] = settings
+        self._log["runs"] = []
+
+    def add_run(self,
+                evac_times: list[int],
+                total_evac_time: int,
+                num_agents_left: int,
+                ) -> None:
+        """
+        Add a run to the log.
+
+        Args:
+            evac_times: The individual evacuation times of the agents
+            total_evac_time: The total evacuation time in steps.
+            num_agents_left: The number of agents left in the simulation.
+        """
+        run_data = {
+            "evac_times": evac_times,
+            "avg_evac_time": sum(evac_times) / len(evac_times),
+            "total_evac_time": total_evac_time,
+            "num_agents_left": num_agents_left,
         }
-    
-    write_log(log_num, data)
 
-def write_log(log_num: int, data: dict|list) -> None:
-    """
-    Write simdata to a log file with given count
+        self._log["runs"].append(run_data)
 
-    Args:
-        log_num: the unique log num
-        data: The data to log
-    """
-    log_json = os.path.join(os.path.dirname(__file__), "logs", f"log_{log_num}.json")
+    def save(self) -> None:
+        """
+        Save the log to a JSON file.
+        """
+        log_json = os.path.join(os.path.dirname(__file__), "logs", f"log_{self._log_num}.json")
 
-    with open(log_json, "w", encoding="utf-8") as json_file:
-        json.dump(data, json_file, indent=4)
+        with open(log_json, "w", encoding="utf-8") as json_file:
+            json.dump(self._log, json_file, indent=4)
 
-def read_increment_log_count() -> int:
-    """
-    Read from logs/cnt for next unique log-number, also increment it
+    def _read_increment_log_count(self) -> int:
+        """
+        Read from logs/cnt for next unique log-number, also increment it
 
-    Returns:
-        int: A unique log-num
-    """
-    file_path = os.path.join(os.path.dirname(__file__), "logs", "cnt.txt")
+        Returns:
+            int: A unique log-num
+        """
+        file_path = os.path.join(os.path.dirname(__file__), "logs", "cnt.txt")
 
-    with open(file_path, "r", encoding="utf-8") as file:
-        count = int(file.read())
-    
-    count += 1
+        with open(file_path, "r", encoding="utf-8") as file:
+            count = int(file.read())
+        
+        count += 1
 
-    with open(file_path, "w", encoding="utf-8") as file:
-        file.write(str(count))
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(str(count))
 
-    return count
+        return count

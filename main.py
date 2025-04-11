@@ -1,41 +1,33 @@
 from src import Simulation
 
+from itertools import product
+
 def main():
-    # Example with plurality voting
-    sim1 = Simulation(
-        floor_plan="Heidelberglaan_15",
-        num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="plurality",
-    )
-    sim1.run()
-    
-    # Example with approval voting
-    sim2 = Simulation(
-        floor_plan="Heidelberglaan_15",
-        num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="approval"
-    )
-    sim2.run()
-    
-    # Example with cumulative voting
-    sim3 = Simulation(
-        floor_plan="Heidelberglaan_15",
-        num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="cumulative"
-    )
-    sim3.run()
+    grid_search = {
+        "voting_method": ["plurality", "approval", "cumulative"],
+        "abled_to_disabled_ratio": [0.95, 0.9, 0.85],
+        "morality_mean": [0.4, 0.5, 0.6],
+    	"morality_std": [0.1, 0.2, 0.3]
+    }
+
+    combinations = [
+        dict(zip(grid_search.keys(), values))
+        for values in product(*grid_search.values())
+    ]
+
+    for comb in combinations:
+        print(f"Running simulation with: {comb}")
+
+        sim = Simulation(
+            floor_plan="Heidelberglaan_15",
+            num_agents=250,
+            abled_to_disabled_ratio=comb["abled_to_disabled_ratio"],
+            voting_method=comb["voting_method"],
+            morality_mean=comb["morality_mean"],
+            morality_std=comb["morality_std"]
+        )
+
+        sim.run(num_batches=10)
 
 if __name__ == "__main__":
     main()

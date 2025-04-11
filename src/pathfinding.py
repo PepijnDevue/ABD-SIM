@@ -1,11 +1,17 @@
-import math
 import networkx as nx
 import mesa
 
 from .agents import Wall, Exit
 
 class Pathfinder:
+    """
+    Class that implements the pathfinding algorithm for the simulation.
+    The class uses Dijkstra's algorithm to find the shortest path between two points in the grid.
+    """
     def __init__(self, grid: mesa.space.SingleGrid):
+        """
+        Initialize the Pathfinder with a grid.
+        """
         self._exit_positions = self._get_exit_positions(grid)
         self._graph = self._setup_graph(grid)
     
@@ -41,7 +47,7 @@ class Pathfinder:
 
         return sorted_exits, sorted_distances
 
-    def _get_exit_distances(self, from_pos):
+    def _get_exit_distances(self, from_pos: tuple[int, int]) -> list[int]:
         """
         Get the distances to all exits from a given position.
         """
@@ -57,6 +63,10 @@ class Pathfinder:
         return exit_distances
 
     def _setup_graph(self, grid: mesa.space.SingleGrid) -> nx.Graph:
+        """
+        Set up the graph for the grid using NetworkX.
+        The graph is undirected and contains nodes for each non-wall position.
+        """
         graph = nx.Graph()
 
         for agent, coordinates in grid.coord_iter():
@@ -83,16 +93,11 @@ class Pathfinder:
         return graph
     
     def _get_exit_positions(self, grid: mesa.space.SingleGrid) -> list[tuple[int, int]]:
+        """	
+        Get the positions of all exit agents in the grid.
+        """
         exit_positions = []
         for agent, (x, y) in grid.coord_iter():
             if isinstance(agent, Exit):
                 exit_positions.append((x, y))
         return exit_positions
-
-    def _find_closest_coordinate(self, 
-                                target_coordinates: tuple[int, int], 
-                                coordinates: list[tuple[int, int]]
-                                ) -> tuple[int, int]:
-        target_x, target_y = target_coordinates
-        closest_coordinate = min(coordinates, key=lambda coord: math.dist((target_x, target_y), coord))
-        return closest_coordinate
