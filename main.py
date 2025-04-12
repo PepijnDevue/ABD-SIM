@@ -15,7 +15,15 @@ def main():
         for values in product(*grid_search.values())
     ]
 
+    ready = False
+
     for comb in combinations:
+        if not ready:
+            if comb == {'voting_method': 'cumulative', 'abled_to_disabled_ratio': 0.9, 'morality_mean': 0.4, 'morality_std': 0.1}:
+                ready = True
+            else:
+                continue
+
         print(f"Running simulation with: {comb}")
 
         sim = Simulation(
