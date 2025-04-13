@@ -4,7 +4,7 @@ from itertools import product
 
 def main():
     grid_search = {
-        "voting_method": ["plurality", "approval", "cumulative"],
+        "voting_method": ["plurality"],
         "abled_to_disabled_ratio": [0.95, 0.9, 0.85],
         "morality_mean": [0.4, 0.5, 0.6],
     	"morality_std": [0.1, 0.2, 0.3]
@@ -19,7 +19,7 @@ def main():
 
     for comb in combinations:
         if not ready:
-            if comb == {'voting_method': 'cumulative', 'abled_to_disabled_ratio': 0.9, 'morality_mean': 0.4, 'morality_std': 0.1}:
+            if comb == {'voting_method': 'plurality', 'abled_to_disabled_ratio': 0.85, 'morality_mean': 0.4, 'morality_std': 0.3}:
                 ready = True
             else:
                 continue
@@ -35,7 +35,7 @@ def main():
             morality_std=comb["morality_std"]
         )
 
-        sim.run(num_batches=1)
+        sim.run(num_batches=5)
 
 if __name__ == "__main__":
     main()
