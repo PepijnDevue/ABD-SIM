@@ -25,69 +25,39 @@ def read_json_files_from_dir(directory: str) -> list[dict]:
 data = read_json_files_from_dir("src/logs")
 
 def jsons_to_dataframe(data: list[dict]) -> pd.DataFrame:
-    """
-    Convert a list of dictionaries to a pandas DataFrame.
+    rows = []
 
-    Args:
-        data (list[dict]): A list of dictionaries containing the data.
+    for log in data:
+        # Get the settings
+        num_agents = log["settings"]["num_agents"]
+        abled_to_disabled_ratio = log["settings"]["abled_to_disabled_ratio"]
+        morality_mean = log["settings"]["morality_mean"]
+        morality_std = log["settings"]["morality_std"]
+        voting_method = log["settings"]["voting_method"]
+    
+        for run in log["runs"]:
+            # Get the run data
+            avg_evac_time = run["avg_evac_time"]
+            total_evac_time = run["total_evac_time"]
+            num_agents_left = run["num_agents_left"]
+            evac_times = run["evac_times"]
 
-    Returns:
-        pd.DataFrame: A pandas DataFrame containing the data.
-    """
-    abled_to_disabled_ratio = [d["settings"]["abled_to_disabled_ratio"] for d in data]
+            # Create a new row for the dataframe
+            rows.append({
+                "num_agents": num_agents,
+                "abled_to_disabled_ratio": abled_to_disabled_ratio,
+                "morality_mean": morality_mean,
+                "morality_std": morality_std,
+                "voting_method": voting_method,
+                "avg_evac_time": avg_evac_time,
+                "total_evac_time": total_evac_time,
+                "num_agents_left": num_agents_left,
+                "evac_times": evac_times
+            })
 
-    morality_mean = [d["settings"]["morality_mean"] for d in data]
+    df = pd.DataFrame(rows)
 
-    morality_std = [d["settings"]["morality_std"] for d in data]
-
-    voting_method = [d["settings"]["voting_method"] for d in data]
-
-    num_batches = [len(d["runs"]) for d in data]
-
-    avg_evac_time = [
-        sum(
-            [run["avg_evac_time"] for run in d["runs"]]
-        ) / len(d["runs"]) 
-        for d in data
-    ]
-
-    total_evac_time = [
-        sum(
-            [run["total_evac_time"] for run in d["runs"]]
-        ) / len(d["runs"])
-        for d in data
-    ]
-
-    num_agents = [d["settings"]["num_agents"] for d in data]
-
-    num_agents_left = [
-        sum(
-            [run["num_agents_left"] for run in d["runs"]]
-        ) / len(d["runs"])
-        for d in data
-    ]
-
-    evac_times = [
-        [run["evac_times"] for run in d["runs"]]
-        for d in data
-    ]
-
-    data = pd.DataFrame(
-        {
-            "abled_to_disabled_ratio": abled_to_disabled_ratio,
-            "morality_mean": morality_mean,
-            "morality_std": morality_std,
-            "voting_method": voting_method,
-            "num_batches": num_batches,
-            "avg_evac_time": avg_evac_time,
-            "total_evac_time": total_evac_time,
-            "num_agents": num_agents,
-            "num_agents_left": num_agents_left,
-            "evac_times": evac_times,
-        }
-    )
-
-    return data
+    return df
 
 def main() -> None:
     """
@@ -97,7 +67,7 @@ def main() -> None:
     df = jsons_to_dataframe(data)
     print(f"Length of dataframe: {len(df)}")
     print(df.head())
-    df.to_csv("evacuation_times.csv", index=False)
+    df.to_csv("sim_data.csv", index=False)
     print("Dataframe saved to evacuation_times.csv")
 
 if __name__ == "__main__":
