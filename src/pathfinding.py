@@ -1,22 +1,72 @@
-import math
 import networkx as nx
 import mesa
 
 from .agents import Wall, Exit
 
 class Pathfinder:
+    """
+    Class that implements the pathfinding algorithm for the simulation.
+    The class uses Dijkstra's algorithm to find the shortest path between two points in the grid.
+    """
     def __init__(self, grid: mesa.space.SingleGrid):
+        """
+        Initialize the Pathfinder with a grid.
+        """
         self._exit_positions = self._get_exit_positions(grid)
         self._graph = self._setup_graph(grid)
-
-    def calculateshortestpath(self, pos) -> list[tuple[int, int]]:
-        closest_exit = self._find_closest_coordinate(pos, self._exit_positions)
     
-        shortest_path = nx.shortest_path(self._graph, source=pos, target=closest_exit)
+    def calculate_shortest_path(self, 
+                                from_pos: tuple[int, int], 
+                                to_pos: tuple[int, int]
+                                ) -> list[tuple[int, int]]:
+        """
+        Calculate the shortest path from one position to another using Dijkstra's algorithm.
+        """ 
+        shortest_path = nx.shortest_path(self._graph, source=from_pos, target=to_pos)
 
         return shortest_path[1:]
+    
+    def get_exits(self, from_pos: tuple[int, int]) -> list[tuple[int, int]]:
+        """
+        Get the exits sorted by distance from the given position.
+        
+        Args:
+            from_pos: The position to get the exits from.
+
+        Returns:
+            list: A list of exit positions sorted by distance from the given position.
+        """
+        exit_distances = self._get_exit_distances(from_pos)
+
+        exit_distance_pairs = zip(self._exit_positions, exit_distances)
+
+        sorted_exit_pairs = sorted(exit_distance_pairs, key=lambda x: x[1])
+
+        # Unzip the sorted pairs into two separate lists
+        sorted_exits, sorted_distances = zip(*sorted_exit_pairs)
+
+        return sorted_exits, sorted_distances
+
+    def _get_exit_distances(self, from_pos: tuple[int, int]) -> list[int]:
+        """
+        Get the distances to all exits from a given position.
+        """
+        exit_distances = []
+
+        for exit_pos in self._exit_positions:
+            path = nx.shortest_path(self._graph, source=from_pos, target=exit_pos)
+
+            distance = len(path) - 1
+
+            exit_distances.append(distance)  
+
+        return exit_distances
 
     def _setup_graph(self, grid: mesa.space.SingleGrid) -> nx.Graph:
+        """
+        Set up the graph for the grid using NetworkX.
+        The graph is undirected and contains nodes for each non-wall position.
+        """
         graph = nx.Graph()
 
         for agent, coordinates in grid.coord_iter():
@@ -43,16 +93,11 @@ class Pathfinder:
         return graph
     
     def _get_exit_positions(self, grid: mesa.space.SingleGrid) -> list[tuple[int, int]]:
+        """	
+        Get the positions of all exit agents in the grid.
+        """
         exit_positions = []
         for agent, (x, y) in grid.coord_iter():
             if isinstance(agent, Exit):
                 exit_positions.append((x, y))
         return exit_positions
-
-    def _find_closest_coordinate(self, 
-                                target_coordinates: tuple[int, int], 
-                                coordinates: list[tuple[int, int]]
-                                ) -> tuple[int, int]:
-        target_x, target_y = target_coordinates
-        closest_coordinate = min(coordinates, key=lambda coord: math.dist((target_x, target_y), coord))
-        return closest_coordinate

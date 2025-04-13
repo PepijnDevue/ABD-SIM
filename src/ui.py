@@ -1,7 +1,7 @@
 import mesa
 import os
 
-from .agents import Person, Wall, Exit
+from .agents import AbledPerson, DisabledPerson, Wall, Exit
 
 def show_grid(grid: mesa.space._PropertyGrid, cls: bool=False) -> None:
     """
@@ -9,7 +9,8 @@ def show_grid(grid: mesa.space._PropertyGrid, cls: bool=False) -> None:
     . = empty
     W = wall
     E = exit
-    P = person
+    A = able-bodied person
+    D = disabled person
 
     Args:
         grid: The mesa grid containing the agents.
@@ -43,7 +44,9 @@ def print_cell(cell: list) -> None:
         char = 'W'
     elif isinstance(cell[0], Exit):
         char = 'E'
-    elif isinstance(cell[0], Person):
-        char = 'P'
+    elif isinstance(cell[0], AbledPerson):
+        char = 'A'
+    elif isinstance(cell[0], DisabledPerson):
+        char = 'D'
 
     print(char, end="")
