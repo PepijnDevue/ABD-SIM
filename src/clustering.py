@@ -9,13 +9,19 @@ class Clusters:
     """
     Keep track of clusters, groups and pairs of agents.
     """
-    def __init__(self, model: mesa.Model, voting_method: str = "plurality"):
+    def __init__(self, 
+                 model: mesa.Model, 
+                 voting_method: str = "plurality",
+                 cluster_search_radius: int = 4,
+                 **kwargs
+                 ) -> None:
         self._clusters = {}
         self._schedule = model.schedule
         self._floor_plan = model.floor_plan
         self._grid = model.grid
+        self.search_radius = cluster_search_radius
 
-        self._cnp = ContractNetProtocol()
+        self._cnp = ContractNetProtocol(**kwargs)
         self._voting = self._setup_voting_method(voting_method)
 
     def __iter__(self):
@@ -143,11 +149,9 @@ class Clusters:
         cluster_name = f"c_{curr_cluster_id}"
         positions = [agent.pos]
 
-        search_radius = 4
-        max_iter = 10
-
         self._add_to_cluster(cluster_name, agent)
 
+        max_iter = 10
         for _ in range(max_iter):
             centroid = self._calc_centroid(positions)
 
@@ -156,7 +160,7 @@ class Clusters:
                 centroid,
                 moore=False,
                 include_center=False,
-                radius=search_radius
+                radius=self.search_radius
             )
 
             search_area = self._filter_neighbours(search_area)

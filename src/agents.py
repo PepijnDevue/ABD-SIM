@@ -18,12 +18,17 @@ class Wall(mesa.Agent):
 
 
 class Person(mesa.Agent):
-    def __init__(self, model: mesa.Model):
+    def __init__(self, 
+                 model: mesa.Model, 
+                 approval_threshold: float = 1.5,
+                 **kwargs
+                 ) -> None:
         super().__init__(model)
         self._model = model
         self.speed = None
         self.cluster = None
         self.target_exit = None
+        self.approval_threshold = approval_threshold
 
         # Spawn the agent at a random empty position
         self._model.grid.move_to_empty(self)
@@ -126,7 +131,7 @@ class Person(mesa.Agent):
         weights = [1 / distance for distance in sorted_distances]
 
         # Steepen the weights
-        alpha = 3.14159
+        alpha = 3.14159 # 80% chance an agent chooses either of the 3 closests exits, out of 10
         weights = [weight ** alpha for weight in weights]
 
         # Normalize the weights to sum to 1
@@ -159,8 +164,8 @@ class Person(mesa.Agent):
         
         approved_exits = []
         
-        # Approve exits within 150% of the closest exit's distance
-        threshold = distances[0] * 1.5
+        # Approve exits within X% of the closest exit's distance where X is the approval threshold
+        threshold = distances[0] * self.approval_threshold
         
         for exit_pos, distance in zip(exits, distances):
             if distance <= threshold:
@@ -172,7 +177,7 @@ class Person(mesa.Agent):
         """
         Used by CumulativeVoting.
         Returns a dictionary of exits and their assigned weights.
-        Each agent has 10 points to distribute among exits.
+        Each agent can assert a percentage of their vote to each exit, totalling to 100%.
         Points are distributed based on inverse distance to exits.
         
         Returns:
@@ -183,21 +188,17 @@ class Person(mesa.Agent):
         # Safety check: if no exits/distances found, return empty dict
         if not distances:
             return {}
-        
-        # Each agent gets 10 points to distribute
-        total_points = 10
-        votes = {}
-        
-        # Convert distances to inverse weights (closer exits get more points)
+        # Invert distances to get weights (closer exits get more points)
         weights = [1 / distance for distance in distances]
         
         # Normalize weights to sum to 1
         total_weight = sum(weights)
         weights = [weight / total_weight for weight in weights]
         
-        # Distribute points proportionally based on inverse distance
+        # Distribute points
+        votes = {}
         for exit_pos, weight in zip(exits, weights):
-            votes[exit_pos] = weight * total_points
+            votes[exit_pos] = weight
             
         return votes
 
@@ -205,11 +206,15 @@ class AbledPerson(Person):
     """
     Class that represents an able-bodied person in the grid derived from the Person class.
     """
-    def __init__(self, model: mesa.Model):
-        super().__init__(model)
-        self._morality_mean = model.distribution_settings["mean"]
-        self._morality_std = model.distribution_settings["std"]
-
+    def __init__(self, 
+                 model: mesa.Model,
+                 morality_mean: float = 0.5,
+                 morality_std: float = 0.1,
+                 **kwargs
+                 ) -> None:
+        super().__init__(model, **kwargs)
+        self._morality_mean = morality_mean
+        self._morality_std = morality_std
         
         morality_sample = np.random.normal(self._morality_mean, self._morality_std)
         clipped_morality = np.clip(morality_sample, 0, 1)
@@ -221,8 +226,11 @@ class DisabledPerson(Person):
     """
     Class that represents a disabled person in the grid derived from the Person class.
     """
-    def __init__(self, model: mesa.Model):
-        super().__init__(model)
+    def __init__(self, 
+                 model: mesa.Model,
+                 **kwargs
+                 ) -> None:
+        super().__init__(model, **kwargs)
         self.speed = 0
 
     def step(self) -> None:
@@ -231,7 +239,6 @@ class DisabledPerson(Person):
         The agent does not move, but waits for a helping agent.
         """
         if self.speed == 0:
-            print("Disabled agent waiting for help")
             self.model.clusters.call_out_cnp(self)
             return
         

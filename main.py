@@ -1,41 +1,19 @@
 from src import Simulation
 
 def main():
-    # Example with plurality voting
-    sim1 = Simulation(
+    sim = Simulation(
         floor_plan="Heidelberglaan_15",
         num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="plurality",
+        abled_to_disabled_ratio=0.95,
+        voting_method="approval",
+        morality_mean=0.6,
+        morality_std=0.1,
+        approval_threshold=1.5,
+        cluster_search_radius=4,
+        cnp_call_radius=10
     )
-    sim1.run()
-    
-    # Example with approval voting
-    sim2 = Simulation(
-        floor_plan="Heidelberglaan_15",
-        num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="approval"
-    )
-    sim2.run()
-    
-    # Example with cumulative voting
-    sim3 = Simulation(
-        floor_plan="Heidelberglaan_15",
-        num_agents=250,
-        distribution_settings={
-            "mean": 0.5,
-            "std": 0.2,
-        },
-        voting_method="cumulative"
-    )
-    sim3.run()
+
+    sim.run(num_batches=5)
 
 if __name__ == "__main__":
     main()

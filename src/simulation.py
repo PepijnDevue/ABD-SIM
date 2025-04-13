@@ -7,7 +7,7 @@ from .clustering import Clusters
 from .floor_plan import floor_plans
 from .pathfinding import Pathfinder
 from .grid import Grid
-from .log import log_sim
+from .log import Logger
 
 import time
 
@@ -18,10 +18,9 @@ class Simulation(mesa.Model):
     Simulation class for the evacuating a building.
     """
     def __init__(self, 
-                 floor_plan: str, 
-                 distribution_settings: dict[str, float], 
-                 voting_method: str = "plurality",
-                 num_agents: int = 5):
+                 floor_plan: str,
+                 **settings
+                 ) -> None:
         """
         Setup the simulation with a grid, agents and schedule.
 
@@ -32,9 +31,17 @@ class Simulation(mesa.Model):
             num_agents: The number of agents to spawn
         """
         super().__init__()
-        self.schedule = RandomActivation()
+        self._settings = settings
 
         self.floor_plan = floor_plans[floor_plan]
+
+        self._log = Logger(settings)
+
+    def _setup(self) -> None:
+        """
+        Setup the simulation.
+        """
+        self.schedule = RandomActivation()
 
         self.grid = Grid(
             width=len(self.floor_plan[0]),
@@ -45,9 +52,7 @@ class Simulation(mesa.Model):
 
         self.pathfinder = Pathfinder(self.grid)
 
-        self.distribution_settings = distribution_settings
-
-        self._spawn_agents(num_agents)
+        self._spawn_agents()
 
         self._step_count = 0
 
@@ -55,11 +60,7 @@ class Simulation(mesa.Model):
 
         self._exit_times = []
 
-        self.clusters = Clusters(self, voting_method)
-
-        self._voting_method = voting_method
-
-        show_grid(self.grid)
+        self.clusters = Clusters(self, **self._settings)
 
     def log_agent_evacuate_time(self):
         """
@@ -69,10 +70,13 @@ class Simulation(mesa.Model):
             self._step_count
         )
 
-    def _spawn_agents(self, num_agents: int=1, abled_to_disabled_ratio=0.95) -> None:
+    def _spawn_agents(self) -> None:
         """
         Spawn agents scattered around the grid.
         """
+        num_agents = self._settings.get("num_agents", 250)
+        abled_to_disabled_ratio = self._settings.get("abled_to_disabled_ratio", 0.95)
+
         # Spawn able agents
         for _ in range(int(num_agents * abled_to_disabled_ratio)):
             agent = AbledPerson(self)
@@ -83,33 +87,49 @@ class Simulation(mesa.Model):
             agent = DisabledPerson(self)
             self.schedule.add(agent)
 
-    def run(self, max_time_steps: int=10_000) -> None:
+    def run(self, 
+            num_batches: int = 10, 
+            verbose: bool = False,
+            frame_duration_seconds: float = 0
+            ) -> None:
         """
         Run an entire simulation.
 
         Args:
-            max_time_steps: The number of timesteps to run the simulation for.
+            num_batches: The number of batches to run
+            verbose: Whether to show the grid in the terminal
+            frame_duration_seconds: The minimum duration of each frame in seconds
         """
-        self.clusters.run()
+        max_time_steps = self._settings.get("max_time_steps", 1_000)
 
-        while not self._is_finished(max_time_steps):
-            show_grid(self.grid, cls=True)
+        for _ in range(num_batches):
+            self._setup()
 
-            self._sleep(0.15)
+            print(f"Running batch {_ + 1}/{num_batches}...")
 
-            self.schedule.step()
+            self.clusters.run()
 
-            self._step_count += 1
+            while not self._is_finished(max_time_steps):
+                if verbose:
+                    show_grid(self.grid, cls=True)
 
-        show_grid(self.grid, cls=True)
+                self._sleep(frame_duration_seconds)
+
+                self.schedule.step()
+
+                self._step_count += 1
+
+            if verbose:
+                show_grid(self.grid, cls=True)
+
+            self._log.add_run(
+                evac_times=self._exit_times, 
+                total_evac_time=self._step_count, 
+                num_agents_left=len(self.schedule)
+            )
 
         print("Simulation completed...")
-        log_sim(
-            self._exit_times, 
-            self._step_count, 
-            len(self.schedule), 
-            voting_method=self._voting_method
-        )
+        self._log.save()
 
     def _initialize_grid(self) -> None:
         """
