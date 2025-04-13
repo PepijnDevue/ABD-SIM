@@ -96,7 +96,9 @@ class Simulation(mesa.Model):
         Run an entire simulation.
 
         Args:
-            max_time_steps: The number of timesteps to run the simulation for.
+            num_batches: The number of batches to run
+            verbose: Whether to show the grid in the terminal
+            frame_duration_seconds: The minimum duration of each frame in seconds
         """
         max_time_steps = self._settings.get("max_time_steps", 1_000)
 

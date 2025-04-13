@@ -68,7 +68,7 @@ def main() -> None:
     print(f"Length of dataframe: {len(df)}")
     print(df.head())
     df.to_csv("sim_data.csv", index=False)
-    print("Dataframe saved to evacuation_times.csv")
+    print("Dataframe saved to sim_data.csv")
 
 if __name__ == "__main__":
     main()
