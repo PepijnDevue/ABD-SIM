@@ -208,11 +208,13 @@ class AbledPerson(Person):
     """
     def __init__(self, 
                  model: mesa.Model,
+                 morality_mean: float = 0.5,
+                 morality_std: float = 0.1,
                  **kwargs
                  ) -> None:
         super().__init__(model, **kwargs)
-        self._morality_mean = kwargs.get("morality_mean", 0.5)
-        self._morality_std = kwargs.get("morality_std", 0.2)
+        self._morality_mean = morality_mean
+        self._morality_std = morality_std
         
         morality_sample = np.random.normal(self._morality_mean, self._morality_std)
         clipped_morality = np.clip(morality_sample, 0, 1)

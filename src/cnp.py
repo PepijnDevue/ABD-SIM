@@ -11,13 +11,13 @@ class ContractNetProtocol:
     The best contractor is selected based on the bid score.
     """
     def __init__(self, 
-                 call_radius: int=10, 
+                 cnp_call_radius: int=10, 
                  **kwargs
                  ) -> None:
         """
         Initialize the ContractNetProtocol class.
         """
-        self._call_radius = call_radius
+        self._call_radius = cnp_call_radius
 
         self._pair_id = 0
 
