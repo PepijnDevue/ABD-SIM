@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.12.8"
-app = marimo.App(width="medium", layout_file="layouts/analysis.slides.json")
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -113,12 +113,12 @@ def _(alt, data, mo):
     def _morality_map():
         _df = data.groupby(["morality_mean", "morality_std"], dropna=False).mean(numeric_only=True)
         _df = _df[["avg_evac_time", "total_evac_time", "num_agents_left"]].reset_index()
-    
+
         charts = []
         for metric in ["avg_evac_time", "total_evac_time", "num_agents_left"]:
             xmin = _df[metric].min()
             xmax = _df[metric].max()
-    
+
             heatmap = alt.Chart(_df).mark_circle().encode(
                 x=alt.X('morality_mean:O', title='Morality Mean', axis=alt.Axis(labelAngle=0)),
                 y=alt.Y('morality_std:O', title='Morality Std'),
@@ -135,15 +135,15 @@ def _(alt, data, mo):
                 y=alt.Y('morality_std:O'),
                 text=alt.Text(metric + ":Q", format=".2f")
             )
-    
+
             chart = (heatmap + text).properties(
                 width=230,
                 height=230,
                 title=metric.replace('_', ' ').title()
             )
-    
+
             charts.append(chart)
-    
+
         # Concatenate the charts horizontally
         final_chart = alt.hconcat(*charts).resolve_scale(
             size='independent',
@@ -154,23 +154,25 @@ def _(alt, data, mo):
                 anchor="middle"
             )
         )
-    
+
         return mo.ui.altair_chart(final_chart)
 
-    mo.output.append(mo.md(f"""
-    ## Morality Metrics
-
-    Morality is normaly distributed across all students and is defined by two parameters:
-
-    - **Morality Mean:** The middle of the bell curve
-    - **Morality Std:** The standard deveation of the bell curve
-
-    To visualise the impact of these two parameters on the three metrics, they are plotted as pseudo-3d chart.
-    """))
-    mo.output.append(_morality_map())
-    mo.output.append(mo.md(f"""
-    As expected, the morality has no clear influence on the metrics.
-    """))
+    mo.vstack([
+        mo.md(f"""
+        ## Morality Metrics
+    
+        Morality is normaly distributed across all students and is defined by two parameters:
+    
+        - **Morality Mean:** The middle of the bell curve
+        - **Morality Std:** The standard deveation of the bell curve
+    
+        To visualise the impact of these two parameters on the three metrics, they are plotted as pseudo-3d chart.
+        """),
+        _morality_map(),
+        mo.md(f"""
+        As expected, the morality has no clear influence on the metrics.
+        """)
+    ])
     return
 
 
@@ -179,11 +181,11 @@ def _(alt, data, mo):
     def _plot_distribution(x:str):
         _metrics = ["avg_evac_time", "total_evac_time", "num_agents_left"]
         x_title = x.replace("_", " ").title()
-    
+
         charts = []
         for metric in _metrics:
             metric_title = metric.replace("_", " ").title()
-        
+
             chart = alt.Chart(data).mark_boxplot(size=60).encode(
                 x=alt.X(x+":O", title=x_title, axis=alt.Axis(labelAngle=0)),
                 y=alt.Y(metric+":Q", title=metric_title, scale=alt.Scale(domainMin=data[metric].min()))
@@ -197,7 +199,7 @@ def _(alt, data, mo):
 
         final_chart = alt.hconcat(*charts).properties(
             title=alt.TitleParams(
-                text=f"Distribution of {metric_title}",
+                text=f"Distribution of {x_title}",
                 anchor="middle"
             )
         )
@@ -228,11 +230,13 @@ def _(alt, data, mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md("""
-    ## Conclusion
+    mo.md(
+        """
+        ## Conclusion
 
-    In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more people left behind. The morality parameters have no clear effect on the metrics. The voting method has a slight effect on the evacuation times, however it is hard to say which one is the best. Plurality voting is the worst choice, while approval voting and cumulative voting are better. However, it is hard to say which one is the best. Approval voting might be the best choice as it is slightly better than cumulative voting and is a more realistic voting system for clusters in an evacuation.
-    """)
+        In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more people left behind. The morality parameters have no clear effect on the metrics. The voting method has a slight effect on the evacuation times, however it is hard to say which one is the best. Plurality voting is the worst choice, while approval voting and cumulative voting are better. However, it is hard to say which one is the best. Approval voting might be the best choice as it is slightly better than cumulative voting and is a more realistic voting system for clusters in an evacuation.
+        """
+    )
     return
 
 
