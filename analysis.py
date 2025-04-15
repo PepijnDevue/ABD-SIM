@@ -161,7 +161,7 @@ def _(alt, data, mo):
         mo.md(f"""
         ## Morality Metrics
     
-        Morality is normaly distributed across all students and is defined by two parameters:
+        Morality is normally distributed across all students and is defined by two parameters:
     
         - **Morality Mean:** The middle of the bell curve
         - **Morality Std:** The standard deveation of the bell curve
