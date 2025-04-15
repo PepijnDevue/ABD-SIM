@@ -164,7 +164,7 @@ def _(alt, data, mo):
         Morality is normally distributed across all students and is defined by two parameters:
     
         - **Morality Mean:** The middle of the bell curve
-        - **Morality Std:** The standard deveation of the bell curve
+        - **Morality Std:** The standard deviation of the bell curve
     
         To visualise the impact of these two parameters on the three metrics, they are plotted as pseudo-3d chart.
         """),
