@@ -125,8 +125,8 @@ class ContractNetProtocol:
         return (1 - M) * ((Dm / 2) + Dme) <= Dce / 2
     
     def _get_bids(self,
-                  contractors: list[DisabledPerson]
-                  manager_pos
+                  contractors: list[DisabledPerson],
+                  manager_pos,
                   ) -> list[int]:
         """
         Get the bids of the contractors
@@ -136,7 +136,7 @@ class ContractNetProtocol:
 
         for contractor in contractors:
             # Get the path to the disabled agent
-            path_to_manager = contractor.get_path_to(contractor.pos)
+            path_to_manager = contractor.get_path_to(manager_pos)
 
             # Get the bid based on the distance to the disabled agent
             bid = len(path_to_manager)
