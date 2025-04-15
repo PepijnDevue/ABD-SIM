@@ -217,7 +217,7 @@ def _(alt, data, mo):
 
     ## Voting Method Metrics
 
-    Now this is an intresting one, there are no real heuristics about what kind of voting method would yield the best results in these circumstances. What is also interesting is the amount of disabled persons left behind, given the voting only takes place in clusters (where no disabled persons are present), there should be no effect.
+    Now this is an interesting one, there are no real heuristics about what kind of voting method would yield the best results in these circumstances. What is also interesting is the amount of disabled persons left behind, given the voting only takes place in clusters (where no disabled persons are present), there should be no effect.
     """))
     mo.output.append(_plot_distribution("voting_method"))
     mo.output.append(mo.md("""
