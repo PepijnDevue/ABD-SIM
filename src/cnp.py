@@ -46,9 +46,6 @@ class ContractNetProtocol:
         """
         disabled_agent.target_exit = disabled_agent.vote_exit()
 
-        # Get the path to the exit for the disabled agent
-        caller_exit_path = disabled_agent.get_exit_path()
-
         # Get available contractors
         contractors = self._call_for_proposal(disabled_agent)
 
@@ -56,11 +53,7 @@ class ContractNetProtocol:
             return {} # No contractors available, move to the next disabled agent
 
         # Add bids to the contractors dictionary
-        bids = self._get_bids(
-            disabled_agent, 
-            contractors, 
-            len(caller_exit_path)
-        )
+        bids = self._get_bids(contractors, disabled_agent.pos)
         
         # Find the best contractor based on the bid score
         best_bid_idx = np.argmin(bids)
@@ -89,58 +82,6 @@ class ContractNetProtocol:
 
         return {cluster_name: [disabled_agent, best_contractor]}
 
-    def _get_bids(self,
-                      disabled_agent: DisabledPerson,
-                      contractors: list[AbledPerson],
-                      distance_to_exit: int
-                      ) -> list[float]:
-        """
-        Handle the bidding process for a disabled agent.
-        """
-        bids = []
-
-        for contractor in contractors:
-            path_to_caller = contractor.get_path_to(disabled_agent.pos)
-
-            P_score = self._calculate_bid(
-                morality=contractor.morality,
-                distance_to_caller=len(path_to_caller),
-                distance_to_exit=distance_to_exit
-            )
-
-            bids.append(P_score)
-
-        return bids
-
-    def _calculate_bid(self,
-                       morality: float, 
-                       distance_to_caller: int, 
-                       distance_to_exit: int
-                       ) -> float:
-        """
-        Calculate the bid score for the contractor.
-
-        The bid score is calculated based on the morality of the agent,
-        the distance to the caller and the distance to the exit.
-        The formula is:
-        P_score = (1 - M) * ((Dd / 2) + De)
-        where:
-        M = morality of the agent
-        Dd = distance to caller
-        De = distance to exit
-
-        Args:
-            morality: The morality of the agent.
-            distance_to_caller: The distance from the contractor to the caller.
-            distance_to_exit: The distance from the caller to the exit.
-        """
-        M = morality
-        Dd = distance_to_caller
-        De = distance_to_exit
-        
-        P_score = (1 - M) * ((Dd / 2) + De)
-        return P_score
-
     def _call_for_proposal(self, disabled_agent: DisabledPerson) -> list[AbledPerson]:
         """
         Identify contractors willing to bid for assisting the disabled agent.
@@ -149,23 +90,60 @@ class ContractNetProtocol:
 
         nearby_abled_agents = self._find_contractors(disabled_agent)
 
+        manager_exit_dist = len(disabled_agent.get_exit_path())
+
         contractors = [
             abled_agent for abled_agent in nearby_abled_agents
-            if self._check_bid_willingness(abled_agent)
+            if self._check_bid_willingness(abled_agent, 
+                                           disabled_agent.pos,
+                                           manager_exit_dist)
         ]
 
         return contractors
-
-    def _check_bid_willingness(self, agent: AbledPerson) -> bool:
+    
+    def _check_bid_willingness(self, 
+                               contractor: AbledPerson,
+                               manager_position: tuple[int, int],
+                               manager_exit_dist: int
+                               ) -> bool:
         """
-        Assess if the agent is willing to bid based on their morality
-        and if they are not already helping.
+        Check if the contractor is willing to bid for the disabled agent.
+        This dicision is based on the morality of the contractor and some distances.
+
+        M = Morality of the contractor
+        Dm = Distance from contractor to manager
+        Dme = Distance from manager to exit
+        Dce = Distance from contractor to exit
+
+        willing = (1 - M) * ((Dm / 2) + Dme) <= Dce / 2
         """
-        bid_chance = np.random.uniform(0, 1)
+        M = contractor.morality
+        Dm = len(contractor.get_path_to(manager_position))
+        Dme = manager_exit_dist
+        Dce = len(contractor.get_path_to(contractor.vote_exit()))
 
-        willing_to_bid = bid_chance <= agent.morality
+        return (1 - M) * ((Dm / 2) + Dme) <= Dce / 2
+    
+    def _get_bids(self,
+                  contractors: list[DisabledPerson],
+                  manager_pos,
+                  ) -> list[int]:
+        """
+        Get the bids of the contractors
+        This is sumply the distance between the contractor and the disabled agent.
+        """
+        bids = []
 
-        return willing_to_bid
+        for contractor in contractors:
+            # Get the path to the disabled agent
+            path_to_manager = contractor.get_path_to(manager_pos)
+
+            # Get the bid based on the distance to the disabled agent
+            bid = len(path_to_manager)
+
+            bids.append(bid)
+
+        return bids
     
     def _find_contractors(self, disabled_agent: DisabledPerson) -> dict[mesa.Agent, int]:
         """
