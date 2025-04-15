@@ -53,7 +53,7 @@ class ContractNetProtocol:
             return {} # No contractors available, move to the next disabled agent
 
         # Add bids to the contractors dictionary
-        bids = self._get_bids(contractors)
+        bids = self._get_bids(contractors, disabled_agent.pos)
         
         # Find the best contractor based on the bid score
         best_bid_idx = np.argmin(bids)
@@ -124,7 +124,10 @@ class ContractNetProtocol:
 
         return (1 - M) * ((Dm / 2) + Dme) <= Dce / 2
     
-    def _get_bids(self, contractors: list[DisabledPerson]) -> list[int]:
+    def _get_bids(self,
+                  contractors: list[DisabledPerson]
+                  manager_pos
+                  ) -> list[int]:
         """
         Get the bids of the contractors
         This is sumply the distance between the contractor and the disabled agent.
