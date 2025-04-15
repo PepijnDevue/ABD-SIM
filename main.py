@@ -13,7 +13,9 @@ def main():
         cnp_call_radius=10
     )
 
-    sim.run(num_batches=5)
+    sim.run(num_batches=1,
+            verbose=True,
+            frame_duration_seconds=0.4)
 
 if __name__ == "__main__":
     main()
