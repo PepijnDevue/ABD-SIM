@@ -1,17 +1,15 @@
-import mesa
-
-from .agents import AbledPerson, DisabledPerson, Wall, Exit
-
-from .activation import RandomActivation
-from .clustering import Clusters
-from .floor_plan import floor_plans
-from .pathfinding import Pathfinder
-from .grid import Grid
-from .log import Logger
-
 import time
+import mesa
+import pandas as pd
 
 from .ui import show_grid
+from .log import Logger
+from .grid import Grid
+from .floor_plan import floor_plans
+from .clustering import Clusters
+from .activation import RandomActivation
+from .pathfinding import Pathfinder
+from .agents import AbledPerson, DisabledPerson, Wall, Exit
 
 class Simulation(mesa.Model):
     """
@@ -88,7 +86,7 @@ class Simulation(mesa.Model):
             self.schedule.add(agent)
 
     def run(self, 
-            num_batches: int = 10, 
+            num_batches: int = 1, 
             verbose: bool = False,
             frame_duration_seconds: float = 0
             ) -> None:
@@ -105,8 +103,6 @@ class Simulation(mesa.Model):
         for _ in range(num_batches):
             self._setup()
 
-            print(f"Running batch {_ + 1}/{num_batches}...")
-
             self.clusters.run()
 
             while not self._is_finished(max_time_steps):
@@ -122,15 +118,14 @@ class Simulation(mesa.Model):
             if verbose:
                 show_grid(self.grid, cls=True)
 
-            self._log.add_run(
+            self._log(
                 evac_times=self._exit_times, 
                 total_evac_time=self._step_count, 
                 num_agents_left=len(self.schedule)
             )
 
-        print("Simulation completed...")
-        self._log.save()
-
+        return self._log.get()
+               
     def _initialize_grid(self) -> None:
         """
         Fill the grid with walls and exits based on the floor plan.

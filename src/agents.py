@@ -52,7 +52,7 @@ class Person(mesa.Agent):
             target_pos = path_to_exit.pop(0)
 
             # Remove the agent if it is at the exit
-            if self._model.grid._cell_is_exit(target_pos):
+            if self._model.grid.cell_is_exit(target_pos):
                 self._remove()
                 self._model.log_agent_evacuate_time()
                 return
@@ -62,11 +62,19 @@ class Person(mesa.Agent):
                 self._model.grid.move_agent(self, target_pos)
                 continue
         
-            # If blocked by another agent, merge clusters if they have different target exits
+            # Handle collision with other agents
             other_agent = self._model.grid.get_cell_list_contents(target_pos)[0]
-            if other_agent.target_exit != self.target_exit:
+
+
+            if other_agent.target_exit == self.target_exit:
+                return # Be patient and wait for the cluster-mate to move
+            
+            if other_agent.cluster is None:
+                # Other agent is helpless disabled agent, swap positions to avoid collision
+                self._model.grid.swap_agents(self, other_agent)
+            else:
+                # Other agent is from another cluster, merge the clusters
                 self._model.clusters.merge(self.cluster, other_agent.cluster)
-            return
 
     def get_neighbors(self, radius: int) -> 'list[Person]':
         """
@@ -216,9 +224,9 @@ class AbledPerson(Person):
         self._morality_mean = morality_mean
         self._morality_std = morality_std
         
-        morality_sample = np.random.normal(self._morality_mean, self._morality_std)
-        clipped_morality = np.clip(morality_sample, 0, 1)
-        self.morality = np.round(clipped_morality, 2)
+        self.morality = -1
+        while 0 <= self.morality <= 1: 
+            self.morality = np.random.normal(self._morality_mean, self._morality_std)
 
         self.speed = 2
 

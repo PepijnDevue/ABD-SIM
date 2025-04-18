@@ -33,7 +33,7 @@ def _():
 
 @app.cell(hide_code=True)
 def _(mo, pd):
-    data = pd.read_csv("sim_data.csv")
+    data = pd.read_csv("logs/sim_data_v2.csv")
 
     mo.md(f"""
     **Unique Setting Values**
@@ -110,8 +110,8 @@ def _(alt, data, mo):
 
 @app.cell(hide_code=True)
 def _(alt, data, mo):
-    def _morality_map():
-        _df = data.groupby(["morality_mean", "morality_std"], dropna=False).mean(numeric_only=True)
+    def morality_map(df):
+        _df = df.groupby(["morality_mean", "morality_std"], dropna=False).mean(numeric_only=True)
         _df = _df[["avg_evac_time", "total_evac_time", "num_agents_left"]].reset_index()
 
         charts = []
@@ -160,20 +160,20 @@ def _(alt, data, mo):
     mo.vstack([
         mo.md(f"""
         ## Morality Metrics
-    
+
         Morality is normally distributed across all students and is defined by two parameters:
-    
+
         - **Morality Mean:** The middle of the bell curve
         - **Morality Std:** The standard deviation of the bell curve
-    
+
         To visualise the impact of these two parameters on the three metrics, they are plotted as pseudo-3d chart.
         """),
-        _morality_map(),
+        morality_map(data),
         mo.md(f"""
-        As expected, the morality has no clear influence on the metrics.
+        As expected from the correlation matrix, the morality has no clear influence on the metrics.
         """)
     ])
-    return
+    return (morality_map,)
 
 
 @app.cell(hide_code=True)
@@ -229,12 +229,50 @@ def _(alt, data, mo):
 
 
 @app.cell(hide_code=True)
+def _(mo, pd):
+    data_rerun = pd.read_csv("logs/sim_data_v3.csv")
+
+    mo.output.append(mo.md(f"""
+    ## Morality Rerun
+
+    In the simulation data above, no truly unique mean morality values were tested. As there seem to be no effects from the morality mean and std, we'll analyse a second run where more extreme morality mean values were used.
+
+    **Unique Setting Values**
+
+    - **Abled to Disabled Ratio**: `{data_rerun["abled_to_disabled_ratio"].unique()}`
+    - **Mean Morality**: `{data_rerun["morality_mean"].unique()}`
+    - **Morality std**: `{data_rerun["morality_std"].unique()}`
+    - **Voting method**: `{data_rerun["voting_method"].unique()}`"""))
+    return (data_rerun,)
+
+
+@app.cell(hide_code=True)
+def _(data_rerun, mo, morality_map):
+    mo.vstack([
+        mo.md(f"""
+        ## Morality Metrics
+
+        Let us see if more extreme **Morality Mean** Values have more effect on the evacuation
+        """),
+        morality_map(data_rerun),
+        mo.md(f"""
+        There are still no clear effects.
+        """)
+    ])
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md(
         """
         ## Conclusion
 
-        In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more people left behind. The morality parameters have no clear effect on the metrics. The voting method has a slight effect on the evacuation times, however it is hard to say which one is the best. Plurality voting is the worst choice, while approval voting and cumulative voting are better. However, it is hard to say which one is the best. Approval voting might be the best choice as it is slightly better than cumulative voting and is a more realistic voting system for clusters in an evacuation.
+        In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more people left behind. 
+
+        The voting method has a slight effect on the evacuation times, however it is hard to say which one is the best. Plurality voting is the worst choice, while approval voting and cumulative voting are better. However, it is hard to say which one is the best. Approval voting might be the best choice as it is slightly better than cumulative voting and is a more realistic voting system for clusters in an evacuation.
+
+        What is unexpected is the **Morality Mean** and **Morality Std**, these parameters had no clear impact or influence on the target metrics whatsoever. Even after setting these to more extreme values. 
         """
     )
     return
