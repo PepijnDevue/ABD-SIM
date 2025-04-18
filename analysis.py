@@ -1,6 +1,6 @@
 import marimo
 
-__generated_with = "0.12.8"
+__generated_with = "0.12.10"
 app = marimo.App(width="medium")
 
 
@@ -18,15 +18,15 @@ def _():
     **Input variables:**
 
     - **Voting method**: The way clusters vote for the best target exit
-    - **Abled to Disabled Ratio**: The ratio of abled to disabled people in the simulation
-    - **Mean Morality**: The mean morality of the abled people
-    - **Morality std**: The standard deviation of the morality of the abled people
+    - **Abled to Disabled Ratio**: The ratio of abled to disabled agents in the simulation
+    - **Mean Morality**: The mean morality of the abled agents
+    - **Morality std**: The standard deviation of the morality of the abled agents
 
     **Metric values:**
 
-    - **Average Evacuation Time**: The time a student needs to evacuate on average
-    - **Total Evacuation Time**: The time all students need to evacuate (excluding those left behind)
-    - **Number of Students Left Behind**: The amount of students that remained helpless and were left behind
+    - **Average Evacuation Time**: The time a agents needs to evacuate on average
+    - **Total Evacuation Time**: The time all agents need to evacuate (excluding those left behind)
+    - **Number of Agents Left Behind**: The amount of disabled agents that remained helpless and were left behind
     """)
     return alt, mo, pd
 
@@ -161,7 +161,7 @@ def _(alt, data, mo):
         mo.md(f"""
         ## Morality Metrics
 
-        Morality is normally distributed across all students and is defined by two parameters:
+        Morality is normally distributed across all agents and is defined by two parameters:
 
         - **Morality Mean:** The middle of the bell curve
         - **Morality Std:** The standard deviation of the bell curve
@@ -209,11 +209,11 @@ def _(alt, data, mo):
     mo.output.append(mo.md("""
     ## Abled to Disabled Ratio Metrics
 
-    The ratio of abled to disabled persons in the simulation is a very important parameter. It is expected that the more disabled persons are in the simulation, the less efficient and effective the evacuation will be.
+    The ratio of abled to disabled persons in the simulation is a very important parameter. It is expected that the more disabled agents are in the simulation, the less efficient and effective the evacuation will be.
     """))
     mo.output.append(_plot_distribution("abled_to_disabled_ratio"))
     mo.output.append(mo.md("""
-    Indeed the evacuation times quite drastically decrease when the amount of disabled persons decreases. Also the amount of students left behind decreases.
+    Indeed the evacuation times quite drastically decrease when the amount of disabled persons decreases. Also the amount of agents left behind decreases.
 
     ## Voting Method Metrics
 
@@ -268,11 +268,11 @@ def _(mo):
         """
         ## Conclusion
 
-        In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more people left behind. 
+        In this document we have seen the effects of the input parameters on the evacuation metrics. The most important parameter is the ratio of abled to disabled persons. More disabled persons means less abled persons to help them which directly leads to more time needed to evacuate and more agents left behind. 
 
         The voting method has a slight effect on the evacuation times, however it is hard to say which one is the best. Plurality voting is the worst choice, while approval voting and cumulative voting are better. However, it is hard to say which one is the best. Approval voting might be the best choice as it is slightly better than cumulative voting and is a more realistic voting system for clusters in an evacuation.
 
-        What is unexpected is the **Morality Mean** and **Morality Std**, these parameters had no clear impact or influence on the target metrics whatsoever. Even after setting these to more extreme values. 
+        What is unexpected is the **Morality Mean** and **Morality Std**, these parameters had no clear impact or influence on the target metrics whatsoever. Even after setting these to more extreme values.
         """
     )
     return
