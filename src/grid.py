@@ -1,6 +1,6 @@
 import mesa
 
-from .agents import Exit
+from .agents import Exit, Person
 
 class Grid(mesa.space.SingleGrid):
     """
@@ -15,8 +15,25 @@ class Grid(mesa.space.SingleGrid):
             floor_plan: The floor plan of the simulation.
         """
         super().__init__(width, height, torus=False)
+
+    def swap_agents(self, agent_a: Person, agent_b: Person) -> None:
+        """
+        Swap the positions of two agents in the grid.
+
+        Args:
+            agent_a: The first agent to swap.
+            agent_b: The second agent to swap.
+        """
+        pos_a = agent_a.pos
+        pos_b = agent_b.pos
+
+        self.remove_agent(agent_a)
+        self.remove_agent(agent_b)
+
+        self.place_agent(agent_a, pos_b)
+        self.place_agent(agent_b, pos_a)
     
-    def _cell_is_exit(self, position: tuple) -> bool:
+    def cell_is_exit(self, position: tuple) -> bool:
         """
         Check if a cell on a given position is an exit cell
 

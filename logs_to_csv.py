@@ -64,8 +64,24 @@ def main() -> None:
     Main function to read JSON files and convert them to a pandas DataFrame.
     """
     data = read_json_files_from_dir("src/logs")
-    df = jsons_to_dataframe(data)
-    print(f"Length of dataframe: {len(df)}")
+
+    new_df = jsons_to_dataframe(data)
+    
+    print(f"Length of new dataframe: {len(new_df)}")
+    
+    # Check if existing CSV file exists
+    if os.path.exists("sim_data.csv"):
+        # Read existing data
+        existing_df = pd.read_csv("sim_data.csv")
+        print(f"Found existing data with {len(existing_df)} rows")
+        
+        # Concatenate with new data
+        df = pd.concat([existing_df, new_df], ignore_index=True)
+        print(f"Combined dataframe has {len(df)} rows")
+    else:
+        df = new_df
+        print("No existing data found. Creating new CSV.")
+    
     print(df.head())
     df.to_csv("sim_data.csv", index=False)
     print("Dataframe saved to sim_data.csv")
